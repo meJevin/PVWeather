@@ -1,4 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:intl/intl.dart';
+
+import 'currentDayInfo.dart';
+import 'currentWeekInfo.dart';
+
+
+enum WeatherInfo { Today, Week }
+
 
 void main() => runApp(MyApp());
 
@@ -19,13 +27,44 @@ class MyHomePage extends StatefulWidget {
 
   @override
   _MyHomePageState createState() => _MyHomePageState();
+
 }
 
 class _MyHomePageState extends State<MyHomePage> {
 
   final double ButtonOpacity = 0.25;
   final double TextOpacity = 0.5;
-  final int startTimeHour = 13;
+
+  final int startTimeHour = DateTime.now().hour;
+  final int startWeekDay = DateTime.now().weekday;
+
+  final PageController bottomPartPageController = PageController(
+    initialPage: 0,
+  );
+
+  WeatherInfo currentInfo = WeatherInfo.Today;
+
+  bool SwitchToToday(){
+    if (bottomPartPageController.page == 0) {
+      return false;
+    }
+    else {
+      bottomPartPageController.animateToPage(0, curve: Curves.easeInOut, duration: Duration(milliseconds: 400));
+    }
+
+    return true;
+  }
+
+  bool SwitchToWeek(){
+    if (bottomPartPageController.page == 1) {
+      return false;
+    }
+    else {
+      bottomPartPageController.animateToPage(1, curve: Curves.easeInOut, duration: Duration(milliseconds: 400));
+    }
+
+    return true;
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -74,6 +113,7 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
                 child: Row(
                   children: [
+                    // Today button
                     Padding(
                       padding: const EdgeInsets.only(
                         left: 10.0,
@@ -89,18 +129,25 @@ class _MyHomePageState extends State<MyHomePage> {
                           text: TextSpan(
                             text: 'Today',
                             style: TextStyle(
-                              color: Colors.black,
+                              color: currentInfo == WeatherInfo.Today ? Colors.black : Colors.black.withOpacity(ButtonOpacity),
                               fontFamily: 'HelveticaNeueLight',
                               fontSize: 16.0,
                             ),
                           ),
                         ),
-                        color: Colors.white,
-                        highlightColor: Colors.white,
+                        color: currentInfo == WeatherInfo.Today ? Colors.white : Colors.white.withOpacity(ButtonOpacity),
+                        highlightColor: currentInfo == WeatherInfo.Today ? Colors.white : Colors.white.withOpacity(ButtonOpacity),
                         splashColor: Colors.grey,
-                        onPressed: (){},
+                        onPressed: (){
+                          if (SwitchToToday()){
+                            setState(() {
+
+                            });
+                          }
+                        }
                       ),
                     ),
+                    // Week button
                     Padding(
                       padding: const EdgeInsets.only(
                         left: 5.0,
@@ -116,16 +163,22 @@ class _MyHomePageState extends State<MyHomePage> {
                           text: TextSpan(
                             text: 'Week',
                             style: TextStyle(
-                              color: Colors.black.withOpacity(ButtonOpacity),
+                              color: currentInfo == WeatherInfo.Week ? Colors.black : Colors.black.withOpacity(ButtonOpacity),
                               fontFamily: 'HelveticaNeueLight',
                               fontSize: 16.0,
                             ),
                           ),
                         ),
-                        color: Colors.white.withOpacity(ButtonOpacity),
-                        highlightColor: Colors.white.withOpacity(ButtonOpacity),
+                        color: currentInfo == WeatherInfo.Week ? Colors.white : Colors.white.withOpacity(ButtonOpacity),
+                        highlightColor: currentInfo == WeatherInfo.Week ? Colors.white : Colors.white.withOpacity(ButtonOpacity),
                         splashColor: Colors.grey,
-                        onPressed: (){},
+                        onPressed: (){
+                          if (SwitchToWeek()){
+                            setState(() {
+
+                            });
+                          }
+                        },
                       ),
                     ),
                   ],
@@ -294,248 +347,28 @@ class _MyHomePageState extends State<MyHomePage> {
 
               // Info for 'Today' tab
               Expanded(
-                //child: ListView.separated(
-                //  scrollDirection: Axis.horizontal,
-                //  itemCount: 2,
-                //  shrinkWrap: true,
-                //  itemBuilder: (BuildContext context, int index) {
-                //    if (index == 0) {
-//
-                //    } else if (index == 1) {
-//
-                //    }
-                //  },
-                //  separatorBuilder: (BuildContext context, int index) {
-                //    return Container(
-                //      height: 50,
-                //      width: 50,
-                //      child: Center(
-                //        child: Container(
-                //          height: 50,
-                //          width: 1,
-                //          color: Colors.white.withOpacity(ButtonOpacity),
-                //        ),
-                //      ),
-                //    );
-                //  },
-                //),
+                child: PageView(
+                  controller: bottomPartPageController,
+                  children: <Widget>[
+                    CurrentDayInfo(startTimeHour: startTimeHour, TextOpacity: TextOpacity, ButtonOpacity: ButtonOpacity),
+                    CurrentWeekInfo(ButtonOpacity: ButtonOpacity),
+                  ],
+                  physics: BouncingScrollPhysics(),
+                  onPageChanged: (int index) {
+                    if (index == 0) {
+                      currentInfo = WeatherInfo.Today;
+                      setState(() {
 
-                child: Container(
-                  color: Colors.blue.withOpacity(0.35),
-                  child: Padding(
-                    padding: EdgeInsets.only(
-                      top:  45.0,
-                      left: 20.0,
-                    ),
-                    child: Column(
-                      children: <Widget>[
+                      });
+                    } else if (index == 1) {
+                      currentInfo = WeatherInfo.Week;
+                      setState(() {
 
-                        // Humidity
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            top: 0.0,
-                          ),
-                          child: Row(
-                            children: <Widget>[
-                              Container(
-                                width: 20,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                      image: ExactAssetImage('assets/other/humidity.png'),
-                                      fit: BoxFit.fill
-                                  ),
-                                  shape: BoxShape.rectangle,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 15.0,
-                                ),
-                                child: RichText(
-                                  text: TextSpan(
-                                    text: '60%',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontFamily: 'HelveticaNeueLight',
-                                      fontSize: 14.0,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Wind speed
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            top: 20.0,
-                          ),
-                          child: Row(
-                            children: <Widget>[
-                              Container(
-                                width: 20,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                      image: ExactAssetImage('assets/other/wind.png'),
-                                      fit: BoxFit.fill
-                                  ),
-                                  shape: BoxShape.rectangle,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 15.0,
-                                ),
-                                child: RichText(
-                                  text: TextSpan(
-                                    text: '5.2 mph',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontFamily: 'HelveticaNeueLight',
-                                      fontSize: 14.0,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Precipitation
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            top: 20.0,
-                          ),
-                          child: Row(
-                            children: <Widget>[
-                              Container(
-                                width: 20,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                      image: ExactAssetImage('assets/other/precipitation.png'),
-                                      fit: BoxFit.fill
-                                  ),
-                                  shape: BoxShape.rectangle,
-                                ),
-                              ),
-                              Padding(
-                                padding: const EdgeInsets.only(
-                                  left: 15.0,
-                                ),
-                                child: RichText(
-                                  text: TextSpan(
-                                    text: '31 mm',
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontFamily: 'HelveticaNeueLight',
-                                      fontSize: 14.0,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-
-                        // Hourly weather predictions
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            top: 50,
-                            right: 20,
-                          ),
-                          child: Container(
-                            height: 125,
-                            child: ListView.separated(
-                              scrollDirection: Axis.horizontal,
-                              itemCount: 25,
-                              itemBuilder: (BuildContext context, int index) {
-                                return Container(
-                                  height: 50,
-                                  color: Colors.transparent,
-                                  child: Center(
-                                    child: Column(
-                                      children: <Widget>[
-                                        // Time
-                                        RichText(
-                                          text: TextSpan(
-                                            text: ((startTimeHour+index) % 24).toString() + ':00',
-                                            style: TextStyle(
-                                              color: Colors.white.withOpacity(TextOpacity),
-                                              fontFamily: 'HelveticaNeueLight',
-                                              fontSize: 11.0,
-                                              fontWeight: FontWeight.w400,
-                                            ),
-                                          ),
-                                        ),
-                                        // Icon
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            top: 15.0,
-                                          ),
-                                          child: Container(
-                                            width: 35,
-                                            height: 35,
-                                            decoration: BoxDecoration(
-                                              image: DecorationImage(
-                                                  image: ExactAssetImage('assets/weather-icons/clear.png'),
-                                                  fit: BoxFit.fill
-                                              ),
-                                              shape: BoxShape.rectangle,
-                                            ),
-                                          ),
-                                        ),
-                                        // Temperature
-                                        Padding(
-                                          padding: const EdgeInsets.only(
-                                            top: 10,
-                                          ),
-                                          child: RichText(
-                                            text: TextSpan(
-                                              text: '13°',
-                                              style: TextStyle(
-                                                color: Colors.white,
-                                                fontFamily: 'HelveticaNeueLight',
-                                                fontSize: 22.0,
-                                                fontWeight: FontWeight.w400,
-                                              ),
-                                            ),
-                                          ),
-                                        ),
-                                      ],
-                                    ),
-                                  ),
-                                );
-                              },
-                              separatorBuilder: (BuildContext context, int index) {
-                                return Container(
-                                  height: 50,
-                                  width: 50,
-                                  child: Center(
-                                    child: Container(
-                                      height: 50,
-                                      width: 1,
-                                      color: Colors.white.withOpacity(ButtonOpacity),
-                                    ),
-                                  ),
-                                );
-                              },
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+                      });
+                    }
+                  },
+                )
               ),
-
-
             ],
           )
         ]
