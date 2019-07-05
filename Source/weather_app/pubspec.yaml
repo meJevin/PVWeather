@@ -22,6 +22,10 @@ dependencies:
 
   intl: 0.15.7
 
+  location: ^1.4.1
+
+  geocoder: ^0.1.2
+
   cupertino_icons: ^0.1.2
 
 dev_dependencies:

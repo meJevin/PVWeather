@@ -1,8 +1,11 @@
 import 'package:flutter/material.dart';
-import 'package:intl/intl.dart';
 
 import 'currentDayInfo.dart';
 import 'currentWeekInfo.dart';
+
+import 'package:location/location.dart';
+
+import 'package:geocoder/geocoder.dart';
 
 
 enum WeatherInfo { Today, Week }
@@ -31,6 +34,9 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
+  var location = new Location();
+  Map<String, double> userLocation;
 
   final double ButtonOpacity = 0.25;
   final double TextOpacity = 0.5;
@@ -66,8 +72,34 @@ class _MyHomePageState extends State<MyHomePage> {
     return true;
   }
 
+  Future<Map<String, double>> GetLocation() async {
+    var currentLocation = <String, double>{};
+    try {
+      currentLocation = await location.getLocation();
+    } catch (e) {
+      currentLocation = null;
+    }
+    return currentLocation;
+  }
+
   @override
   Widget build(BuildContext context) {
+
+    GetLocation().then((value) {
+      setState(() {
+        userLocation = value;
+
+        Coordinates coordinates = Coordinates(userLocation["latitude"], userLocation["longitude"]);
+        List<Address> addresses;
+
+        Geocoder.local.findAddressesFromCoordinates(coordinates).then((value) {
+          addresses = value;
+
+          print(addresses.first.countryName + ", " + addresses.first.featureName);
+        });
+      });
+    });
+
 
     return Scaffold(
       body: Stack(
