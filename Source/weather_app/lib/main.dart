@@ -1,15 +1,21 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/foundation.dart';
 
 import 'currentDayInfo.dart';
 import 'currentWeekInfo.dart';
+
+import 'dart:async';
+import 'dart:convert';
 
 import 'package:location/location.dart';
 
 import 'package:geocoder/geocoder.dart';
 
+import 'package:flutter/services.dart';
+
+import 'package:http/http.dart' as http;
 
 enum WeatherInfo { Today, Week }
-
 
 void main() => runApp(MyApp());
 
@@ -29,20 +35,37 @@ class MyApp extends StatelessWidget {
 class MyHomePage extends StatefulWidget {
 
   @override
-  _MyHomePageState createState() => _MyHomePageState();
+  _MyHomePageState createState(){
+    return _MyHomePageState();
+  }
 
 }
 
 class _MyHomePageState extends State<MyHomePage> {
 
-  var location = new Location();
+  Location location = Location();
   Map<String, double> userLocation;
+
+  String country = '';
+  String adminArea = '';
+  String locality = '';
 
   final double ButtonOpacity = 0.25;
   final double TextOpacity = 0.5;
 
   final int startTimeHour = DateTime.now().hour;
   final int startWeekDay = DateTime.now().weekday;
+
+  final String weatherAPIKey = '4e2b4a7ea0807694fe91fae168ba5cd2';
+
+  String currentTemp = '';
+  String currentWeatherDescription = '';
+  String currentHumidity = '';
+  String currentWindSpeed = '';
+  String currentPercipitation = '';
+  String currentWeatherIconName = 'windy';
+  DateTime currentSunrise = null;
+  DateTime currentSunset = null;
 
   final PageController bottomPartPageController = PageController(
     initialPage: 0,
@@ -82,30 +105,128 @@ class _MyHomePageState extends State<MyHomePage> {
     return currentLocation;
   }
 
-  @override
-  Widget build(BuildContext context) {
+  Future<http.Response> GetCurrentWeather(http.Client client) async {
+    return client.get('http://api.openweathermap.org/data/2.5/weather?lat=' + userLocation["latitude"].toString() + '&lon=' + userLocation["longitude"].toString() + '&appid=' + weatherAPIKey + '&mode=json&units=metric');
+  }
 
-    GetLocation().then((value) {
-      setState(() {
-        userLocation = value;
+  bool isUpdatingLocation = true;
+  bool isUpdatigCurrentWeather = true;
 
-        Coordinates coordinates = Coordinates(userLocation["latitude"], userLocation["longitude"]);
-        List<Address> addresses;
+  void UpdateLocation(){
+    setState(() {
+      isUpdatingLocation = true;
+      print("Updating location");
+      GetLocation().then((value) {
+        setState(() {
+          userLocation = value;
 
-        Geocoder.local.findAddressesFromCoordinates(coordinates).then((value) {
-          addresses = value;
+          Coordinates coordinates = Coordinates(userLocation["latitude"], userLocation["longitude"]);
+          List<Address> addresses;
 
-          print(addresses.first.countryName + ", " + addresses.first.featureName);
+          Geocoder.local.findAddressesFromCoordinates(coordinates).then((value) {
+            setState(() {
+              addresses = value;
+
+              Address address = addresses.first;
+
+              country = address.countryName;
+              locality = address.locality;
+              adminArea = address.adminArea;
+
+              UpdateCurrentWeather();
+              print("Finished updating location");
+              isUpdatingLocation = false;
+            });
+          });
         });
       });
     });
+  }
 
+  void UpdateCurrentWeather(){
+    setState(() {
+      isUpdatigCurrentWeather = true;
+      print("Updating current weather");
+      GetCurrentWeather(http.Client()).then((value) {
+        setState(() {
+          String weatherAPIResponce = value.body;
+          var weatherJSON = json.decode(weatherAPIResponce);
+
+          dynamic rain = (weatherJSON["rain"]);
+
+          currentTemp = (weatherJSON['main']['temp'] as double).round().toString();
+          currentWeatherDescription = (weatherJSON["weather"][0]["main"] as String);
+          currentHumidity = (weatherJSON['main']['humidity'] as int).toString() + '%';
+          currentWindSpeed = (weatherJSON['wind']['speed'] as int).toString() + ' m/s';
+          currentPercipitation = (rain == null ? 'None' : rain["1h"] + ' mm');
+
+          currentSunrise = DateTime.fromMicrosecondsSinceEpoch(
+              (weatherJSON["sys"]["sunrise"] as int) * 1000);
+          currentSunset = DateTime.fromMicrosecondsSinceEpoch(
+              (weatherJSON["sys"]["sunset"] as int) * 1000);
+
+          bool nightTime = DateTime.now().difference(currentSunset).inMilliseconds > 0;
+
+          String weatherConditionID = (weatherJSON["weather"][0]["id"] as int).toString();
+
+          if (weatherConditionID.startsWith('2')){
+            // Thunder
+            currentWeatherIconName = "thunder";
+          } else if (weatherConditionID.startsWith('5')){
+            // Rain
+            currentWeatherIconName = "rain";
+          } else if (weatherConditionID.startsWith('6')){
+            // Snow
+            currentWeatherIconName = "snow";
+          } else if (weatherConditionID == "800"){
+            // Clear
+            if (nightTime){
+              // Clear night
+              currentWeatherIconName = "clear-night";
+            } else {
+              // Clear day
+              currentWeatherIconName = "clear-day";
+            }
+          } else if (weatherConditionID == "801" || weatherConditionID == "802"){
+            // Partly cloudy
+            if (nightTime){
+              currentWeatherIconName = "partly-cloudy-night";
+            } else {
+              currentWeatherIconName = "partly-cloudy";
+            }
+          } else if (weatherConditionID == "803" || weatherConditionID == "804") {
+            // Cloudy
+            currentWeatherIconName = "cloudy";
+          }
+
+          print("Finished current weather");
+          isUpdatigCurrentWeather = false;
+        });
+      });
+    });
+  }
+
+  void initState(){
+    super.initState();
+
+    UpdateLocation();
+
+    SystemChannels.lifecycle.setMessageHandler((msg){
+      if(msg == AppLifecycleState.resumed.toString()){
+        UpdateLocation();
+      }
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
 
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
         children: [
 
+          // BG
           Stack(
             fit: StackFit.expand,
             children: [
@@ -218,21 +339,22 @@ class _MyHomePageState extends State<MyHomePage> {
               ),
 
               // Location Text
-
               Padding(
                 padding: const EdgeInsets.only(
                   left: 20.0,
                   top: 85.0,
                 ),
-                child: Align(
+                child:
+                Align(
                   alignment: Alignment.centerLeft,
-                  child: Column(
+                  child: !isUpdatingLocation ?
+                  Column(
                     children: <Widget>[
                       Align(
                         alignment: Alignment.centerLeft,
                         child: RichText(
                           text: TextSpan(
-                            text: 'Aspen',
+                            text: locality,
                             style: TextStyle(
                               color: Colors.white,
                               fontFamily: 'HelveticaNeueLight',
@@ -246,7 +368,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         alignment: Alignment.centerLeft,
                         child: RichText(
                           text: TextSpan(
-                            text: 'Colorado, USA',
+                            text: adminArea + ', ' + country,
                             style: TextStyle(
                               color: Colors.white.withOpacity(TextOpacity),
                               fontFamily: 'HelveticaNeueLight',
@@ -257,6 +379,10 @@ class _MyHomePageState extends State<MyHomePage> {
                         ),
                       ),
                   ]
+                  )
+                      :
+                  CircularProgressIndicator(
+                  valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),
                   ),
                 ),
               ),
@@ -283,13 +409,15 @@ class _MyHomePageState extends State<MyHomePage> {
                               height: 65,
                               decoration: BoxDecoration(
                                 image: DecorationImage(
-                                  image: ExactAssetImage('assets/weather-icons/windy.png'),
+                                  image: ExactAssetImage('assets/weather-icons/' + currentWeatherIconName + '.png'),
                                   fit: BoxFit.fill
                                 ),
                                 shape: BoxShape.rectangle,
                               ),
                             ),
 
+
+                            // Current Temperature
                             Padding(
                               padding: EdgeInsets.only(
                                 left: 20.0,
@@ -297,7 +425,7 @@ class _MyHomePageState extends State<MyHomePage> {
                               ),
                               child: RichText(
                                 text: TextSpan(
-                                  text: '2',
+                                  text: currentTemp,
                                   style: TextStyle(
                                     color: Colors.white,
                                     fontFamily: 'HelveticaNeueLight',
@@ -360,7 +488,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           alignment: Alignment.centerLeft,
                           child: RichText(
                             text: TextSpan(
-                              text: 'Windy',
+                              text: currentWeatherDescription,
                               style: TextStyle(
                                 color: Colors.white,
                                 fontFamily: 'HelveticaNeueLight',
@@ -376,13 +504,14 @@ class _MyHomePageState extends State<MyHomePage> {
                 ),
               ),
 
+              // Info for Today & Week
 
-              // Info for 'Today' tab
               Expanded(
                 child: PageView(
                   controller: bottomPartPageController,
                   children: <Widget>[
-                    CurrentDayInfo(startTimeHour: startTimeHour, TextOpacity: TextOpacity, ButtonOpacity: ButtonOpacity),
+                    CurrentDayInfo(startTimeHour: startTimeHour, TextOpacity: TextOpacity, ButtonOpacity: ButtonOpacity,
+                    humidity: currentHumidity, windSpeed: currentWindSpeed, percipitation: currentPercipitation,),
                     CurrentWeekInfo(ButtonOpacity: ButtonOpacity),
                   ],
                   physics: BouncingScrollPhysics(),

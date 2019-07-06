@@ -9,11 +9,18 @@ class CurrentDayInfo extends StatelessWidget {
     @required this.startTimeHour,
     @required this.TextOpacity,
     @required this.ButtonOpacity,
+    @required this.humidity,
+    @required this.windSpeed,
+    @required this.percipitation,
   }) : super(key: key);
 
   final int startTimeHour;
   final double TextOpacity;
   final double ButtonOpacity;
+
+  final String humidity;
+  final String windSpeed;
+  final String percipitation;
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +57,7 @@ class CurrentDayInfo extends StatelessWidget {
                     ),
                     child: RichText(
                       text: TextSpan(
-                        text: '60%',
+                        text: humidity,
                         style: TextStyle(
                           color: Colors.white,
                           fontFamily: 'HelveticaNeueLight',
@@ -88,7 +95,7 @@ class CurrentDayInfo extends StatelessWidget {
                     ),
                     child: RichText(
                       text: TextSpan(
-                        text: '5.2 mph',
+                        text: windSpeed,
                         style: TextStyle(
                           color: Colors.white,
                           fontFamily: 'HelveticaNeueLight',
@@ -126,7 +133,7 @@ class CurrentDayInfo extends StatelessWidget {
                     ),
                     child: RichText(
                       text: TextSpan(
-                        text: '31 mm',
+                        text: percipitation,
                         style: TextStyle(
                           color: Colors.white,
                           fontFamily: 'HelveticaNeueLight',
