@@ -123,7 +123,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
 
   Location location = Location();
-  Map<String, double> userLocation;
+  Coordinates userCoords;
 
   String country = '';
   String adminArea = '';
@@ -178,22 +178,30 @@ class _MyHomePageState extends State<MyHomePage> {
     return true;
   }
 
-  Future<Map<String, double>> GetLocation() async {
+  List<Coordinates> debugCoords = [
+    Coordinates(55.837013, 37.936152),
+    Coordinates(49.835099, 24.013943),
+    Coordinates(55.897453, 37.438156),
+    Coordinates(37.178451, -93.274921),
+  ];
+
+  Future<Coordinates> GetLocation() async {
     var currentLocation = <String, double>{};
     try {
       currentLocation = await location.getLocation();
     } catch (e) {
       currentLocation = null;
     }
-    return currentLocation;
+    return debugCoords[1];
+    return Coordinates(currentLocation["latitude"], currentLocation["longitude"]);
   }
 
   Future<http.Response> GetCurrentWeather(http.Client client) async {
-    return client.get('http://api.openweathermap.org/data/2.5/weather?lat=' + userLocation["latitude"].toString() + '&lon=' + userLocation["longitude"].toString() + '&appid=' + weatherAPIKey + '&mode=json&units=metric');
+    return client.get('http://api.openweathermap.org/data/2.5/weather?lat=' + userCoords.latitude.toString() + '&lon=' + userCoords.longitude.toString() + '&appid=' + weatherAPIKey + '&mode=json&units=metric');
   }
 
   Future<http.Response> Get5Day3HourPreditions(http.Client client) async {
-    return client.get('http://api.openweathermap.org/data/2.5/forecast?lat=' + userLocation["latitude"].toString() + '&lon=' + userLocation["longitude"].toString() + '&appid=' + weatherAPIKey + '&mode=json&units=metric');
+    return client.get('http://api.openweathermap.org/data/2.5/forecast?lat=' + userCoords.latitude.toString() + '&lon=' + userCoords.longitude.toString() + '&appid=' + weatherAPIKey + '&mode=json&units=metric');
   }
 
   bool isUpdatingLocation = true;
@@ -205,9 +213,10 @@ class _MyHomePageState extends State<MyHomePage> {
       print("Updating location");
       GetLocation().then((value) {
         setState(() {
-          userLocation = value;
+          userCoords = value;
 
-          Coordinates coordinates = Coordinates(userLocation["latitude"], userLocation["longitude"]);
+          Coordinates coordinates = userCoords;
+          print("Coordinates: " + coordinates.latitude.toString() + ", " + coordinates.longitude.toString());
           List<Address> addresses;
 
           Geocoder.local.findAddressesFromCoordinates(coordinates).then((value) {
@@ -217,7 +226,7 @@ class _MyHomePageState extends State<MyHomePage> {
               Address address = addresses.first;
 
               country = address.countryName;
-              locality = address.locality;
+              locality = address.locality == null ? address.featureName : address.locality;
               adminArea = address.adminArea;
 
               UpdateCurrentWeather();
@@ -296,6 +305,8 @@ class _MyHomePageState extends State<MyHomePage> {
               time,
             ));
           }
+
+          currentWeatherInfos.clear();
 
           for (int i = 0; i < currentWeatherInfoCount; ++i){
             weatherInfos[i].sunset = currentSunset;
@@ -479,7 +490,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                     alignment: Alignment.centerLeft,
                                     child: RichText(
                                       text: TextSpan(
-                                        text: adminArea + ', ' + country,
+                                        text: (adminArea == null ? '' : (adminArea + ', ')) + country,
                                         style: TextStyle(
                                           color: Colors.white.withOpacity(TextOpacity),
                                           fontFamily: 'HelveticaNeueLight',
