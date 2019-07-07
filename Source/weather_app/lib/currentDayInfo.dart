@@ -177,7 +177,7 @@ class WeatherInfoSmall extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      width: 50,
+      width: 55,
       color: Colors.transparent,
       child: Center(
         child: Column(

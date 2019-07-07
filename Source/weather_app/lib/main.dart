@@ -154,12 +154,14 @@ class _MyHomePageState extends State<MyHomePage> {
 
   WeatherInfo currentInfo = WeatherInfo.Today;
 
+  Curve automaticPageTransitionCurve = Curves.fastOutSlowIn;
+
   bool SwitchToToday(){
     if (bottomPartPageController.page == 0) {
       return false;
     }
     else {
-      bottomPartPageController.animateToPage(0, curve: Curves.easeInOut, duration: Duration(milliseconds: 400));
+      bottomPartPageController.animateToPage(0, curve: automaticPageTransitionCurve, duration: Duration(milliseconds: 400));
     }
 
     return true;
@@ -170,7 +172,7 @@ class _MyHomePageState extends State<MyHomePage> {
       return false;
     }
     else {
-      bottomPartPageController.animateToPage(1, curve: Curves.easeInOut, duration: Duration(milliseconds: 400));
+      bottomPartPageController.animateToPage(1, curve: automaticPageTransitionCurve, duration: Duration(milliseconds: 400));
     }
 
     return true;
