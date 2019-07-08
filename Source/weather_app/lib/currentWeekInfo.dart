@@ -9,6 +9,8 @@ import 'main.dart';
 
 import 'dart:math';
 
+String capitalize(String s) => s[0].toUpperCase() + s.substring(1);
+
 class WeekDayWeatherInfo {
   int tempMin;
   int tempMax;
@@ -103,7 +105,10 @@ class _CurrentWeekInfoState extends State<CurrentWeekInfo> {
                       children: <Widget>[
                         RichText(
                           text: TextSpan(
-                            text: DateFormat('EEEE', Localizations.localeOf(context).toString()).format(widget.weatherInfos[index].date),
+                            text:
+                            capitalize(
+                            DateFormat('EEEE',
+                                Localizations.localeOf(context).toString()).format(widget.weatherInfos[index].date)),
                             style: TextStyle(
                               color: Colors.white,
                               fontFamily: 'HelveticaNeueLight',

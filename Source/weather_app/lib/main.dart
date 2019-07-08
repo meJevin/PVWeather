@@ -13,6 +13,9 @@ import 'package:geocoder/geocoder.dart';
 
 import 'package:flutter/services.dart';
 
+import 'package:flutter_localizations/flutter_localizations.dart';
+import 'package:flutter_cupertino_localizations/flutter_cupertino_localizations.dart';
+
 import 'package:http/http.dart' as http;
 
 enum WeatherInfo { Today, Week }
@@ -173,6 +176,17 @@ class MyApp extends StatelessWidget {
       title: 'Weather App',
       debugShowCheckedModeBanner: false,
       home: MyHomePage(),
+      localizationsDelegates: [
+        // ... app-specific localization delegate[s] here
+        GlobalMaterialLocalizations.delegate,
+        GlobalWidgetsLocalizations.delegate,
+        GlobalCupertinoLocalizations.delegate,
+      ],
+      supportedLocales: [
+        const Locale('en'), // English
+        const Locale('ru'), // Russian
+        // ... other locales the app supports
+      ],
     );
   }
 
@@ -188,6 +202,8 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
+  Locale currentLocale;
 
   Location location = Location();
   Coordinates userCoords;
@@ -271,12 +287,19 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Future<http.Response> GetCurrentWeather(http.Client client) async {
     //await Future.delayed(Duration(seconds: 5));
-    return client.get('http://api.openweathermap.org/data/2.5/weather?lat=' + userCoords.latitude.toString() + '&lon=' + userCoords.longitude.toString() + '&appid=' + weatherAPIKey + '&mode=json&units=metric');
+    return client.get('http://api.openweathermap.org/data/2.5/weather?lat=' +
+        userCoords.latitude.toString() + '&lon=' +
+        userCoords.longitude.toString() + '&appid=' +
+        weatherAPIKey + '&mode=json&units=metric&lang=' +
+        currentLocale.toString());
   }
 
   Future<http.Response> Get5Day3HourPreditions(http.Client client) async {
-    //await Future.delayed(Duration(seconds: 5));
-    return client.get('http://api.openweathermap.org/data/2.5/forecast?lat=' + userCoords.latitude.toString() + '&lon=' + userCoords.longitude.toString() + '&appid=' + weatherAPIKey + '&mode=json&units=metric');
+    return client.get('http://api.openweathermap.org/data/2.5/forecast?lat=' +
+        userCoords.latitude.toString() + '&lon=' +
+        userCoords.longitude.toString() + '&appid=' +
+        weatherAPIKey + '&mode=json&units=metric&lang=' +
+        currentLocale.toString());
   }
 
   bool isUpdatingLocation = true;
@@ -326,7 +349,7 @@ class _MyHomePageState extends State<MyHomePage> {
           dynamic rain = (weatherJSON["rain"]);
 
           currentTemp = (weatherJSON['main']['temp'].toInt()).toString();
-          currentWeatherDescription = (weatherJSON["weather"][0]["main"] as String);
+          currentWeatherDescription = capitalize((weatherJSON["weather"][0]["description"] as String));
           currentHumidity = (weatherJSON['main']['humidity']).toString() + '%';
           currentWindSpeed = (weatherJSON['wind']['speed']).toString() + ' m/s';
           currentPrecipitation = (rain == null ? 'None' : rain["1h"] + ' mm');
@@ -427,6 +450,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   @override
   Widget build(BuildContext context) {
+
+    currentLocale = Localizations.localeOf(context);
 
     return Scaffold(
       body: Stack(
