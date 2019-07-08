@@ -3,6 +3,8 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
+import 'package:intl/date_symbol_data_local.dart';
+
 import 'main.dart';
 
 import 'dart:math';
@@ -67,11 +69,13 @@ class CurrentWeekInfo extends StatefulWidget {
   const CurrentWeekInfo({
     Key key,
     @required this.ButtonOpacity,
+    @required this.TextOpacity,
     this.weatherInfos = const[],
     this.onRefreshFunc
   }) : super(key: key);
 
   final double ButtonOpacity;
+  final double TextOpacity;
 
   final List<WeekDayWeatherInfo> weatherInfos;
   final Function onRefreshFunc;
@@ -99,7 +103,7 @@ class _CurrentWeekInfoState extends State<CurrentWeekInfo> {
                       children: <Widget>[
                         RichText(
                           text: TextSpan(
-                            text: DateFormat('EEEE').format(widget.weatherInfos[index].date),
+                            text: DateFormat('EEEE', Localizations.localeOf(context).toString()).format(widget.weatherInfos[index].date),
                             style: TextStyle(
                               color: Colors.white,
                               fontFamily: 'HelveticaNeueLight',
@@ -115,57 +119,64 @@ class _CurrentWeekInfoState extends State<CurrentWeekInfo> {
 
                   Expanded(
                       child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
                         children: <Widget>[
 
                           // Icon
-                          Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 50),
-                            child: Container(
-                              width: 20,
-                              height: 20,
-                              decoration: BoxDecoration(
-                                image: DecorationImage(
-                                    image: ExactAssetImage('assets/weather-icons/' +
-                                        widget.weatherInfos[index].averageIconName  + '.png'),
-                                    fit: BoxFit.fill
-                                ),
-                                shape: BoxShape.rectangle,
+                          Container(
+                            width: 20,
+                            height: 20,
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                  image: ExactAssetImage('assets/weather-icons/' +
+                                      widget.weatherInfos[index].averageIconName  + '.png'),
+                                  fit: BoxFit.fill
                               ),
+                              shape: BoxShape.rectangle,
                             ),
                           ),
 
-                          // Temperature min
-                          RichText(
-                            text: TextSpan(
-                              text: widget.weatherInfos[index].tempMin.toString(),
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontFamily: 'HelveticaNeueLight',
-                                fontSize: 14.0,
-                                fontWeight: FontWeight.w400,
-                              ),
-                            ),
-                          ),
+                          Expanded(
+                            child: Row(
+                              crossAxisAlignment: CrossAxisAlignment.baseline,
+                              textBaseline: TextBaseline.alphabetic,
+                              mainAxisAlignment: MainAxisAlignment.end,
+                              children: <Widget>[
 
-                          // Temperature max
-                          Padding(
-                            padding: const EdgeInsets.symmetric(
-                              horizontal: 5.0,
-                            ),
-                            child: RichText(
-                              text: TextSpan(
-                                text: widget.weatherInfos[index].tempMax.toString(),
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontFamily: 'HelveticaNeueLight',
-                                  fontSize: 14.0,
-                                  fontWeight: FontWeight.w400,
+                                // Temperature max
+                                RichText(
+                                  text: TextSpan(
+                                    text: widget.weatherInfos[index].tempMax.toString() + "°",
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontFamily: 'HelveticaNeueLight',
+                                      fontSize: 20.0,
+                                      fontWeight: FontWeight.w400,
+                                    ),
+                                  ),
                                 ),
-                              ),
+
+
+                                // Temperature min
+                                Padding(
+                                  padding: const EdgeInsets.only(left: 10),
+                                  child: RichText(
+                                    text: TextSpan(
+                                      text: widget.weatherInfos[index].tempMin.toString() + "°",
+                                      style: TextStyle(
+                                        color: Colors.white.withOpacity(widget.TextOpacity),
+                                        fontFamily: 'HelveticaNeueLight',
+                                        fontSize: 16.0,
+                                        fontWeight: FontWeight.w400,
+                                      ),
+                                    ),
+                                  ),
+                                ),
+                              ],
                             ),
                           ),
                         ],
-                        mainAxisAlignment: MainAxisAlignment.end,
                       )
                   ),
 

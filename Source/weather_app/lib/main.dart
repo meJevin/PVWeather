@@ -314,7 +314,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void UpdateCurrentWeather(){
+  void UpdateCurrentWeather() async {
     setState(() {
       isUpdatigCurrentWeather = true;
       print("Updating current weather");
@@ -352,7 +352,7 @@ class _MyHomePageState extends State<MyHomePage> {
     });
   }
 
-  void UpdateCurrentWeatherPreditions() {
+  void UpdateCurrentWeatherPreditions() async {
     setState(() {
       Get5Day3HourPreditions(http.Client()).then((value) {
         setState(() {
@@ -639,7 +639,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                         ),
                                         child: RichText(
                                           text: TextSpan(
-                                            text: currentTemp,
+                                            text: currentTemp + '°C',
                                             style: TextStyle(
                                               color: Colors.white,
                                               fontFamily: 'HelveticaNeueLight',
@@ -650,21 +650,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                         ),
                                       ),
 
-                                      FlatButton(
-                                        padding: EdgeInsets.only(right: 15.0),
-                                        child: RichText(
-                                          text: TextSpan(
-                                            text: '°C',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontFamily: 'HelveticaNeueLight',
-                                              fontSize: 65.0,
-                                              fontWeight: FontWeight.w300,
-                                            ),
-                                          ),
-                                        ),
-                                        onPressed: (){},
-                                      ),
 
                                       //Container(
                                       //  width: 1,
@@ -737,7 +722,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         CurrentDayInfo(startTimeHour: startTimeHour, TextOpacity: TextOpacity, ButtonOpacity: ButtonOpacity,
                         humidity: currentHumidity, windSpeed: currentWindSpeed, percipitation: currentPrecipitation,
                         weatherInfos: currentWeatherInfos,),
-                        CurrentWeekInfo(ButtonOpacity: ButtonOpacity, weatherInfos: weekWeatherInfos, onRefreshFunc: UpdateLocation,),
+                        CurrentWeekInfo(ButtonOpacity: ButtonOpacity, TextOpacity: TextOpacity, weatherInfos: weekWeatherInfos, onRefreshFunc: UpdateLocation,),
                       ],
                       physics: BouncingScrollPhysics(),
                       onPageChanged: (int index) {
