@@ -282,7 +282,7 @@ class _MyHomePageState extends State<MyHomePage> {
   bool isUpdatingLocation = true;
   bool isUpdatigCurrentWeather = true;
 
-  void UpdateLocation(){
+  Future<Null> UpdateLocation() async {
     setState(() {
       isUpdatingLocation = true;
       print("Updating location");
@@ -401,7 +401,9 @@ class _MyHomePageState extends State<MyHomePage> {
               ++i;
             }
 
-            weekWeatherInfos.add(WeekDayWeatherInfo.FromDayWeatherInfoList(dayWeatherInfo));
+            if (dayWeatherInfo.length > 4){
+              weekWeatherInfos.add(WeekDayWeatherInfo.FromDayWeatherInfoList(dayWeatherInfo));
+            }
           }
 
           setState(() {
@@ -735,7 +737,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         CurrentDayInfo(startTimeHour: startTimeHour, TextOpacity: TextOpacity, ButtonOpacity: ButtonOpacity,
                         humidity: currentHumidity, windSpeed: currentWindSpeed, percipitation: currentPrecipitation,
                         weatherInfos: currentWeatherInfos,),
-                        CurrentWeekInfo(ButtonOpacity: ButtonOpacity, weatherInfos: weekWeatherInfos,),
+                        CurrentWeekInfo(ButtonOpacity: ButtonOpacity, weatherInfos: weekWeatherInfos, onRefreshFunc: UpdateLocation,),
                       ],
                       physics: BouncingScrollPhysics(),
                       onPageChanged: (int index) {

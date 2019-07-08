@@ -63,17 +63,24 @@ class WeekDayWeatherInfo {
   }
 }
 
-class CurrentWeekInfo extends StatelessWidget {
+class CurrentWeekInfo extends StatefulWidget {
   const CurrentWeekInfo({
     Key key,
     @required this.ButtonOpacity,
     this.weatherInfos = const[],
+    this.onRefreshFunc
   }) : super(key: key);
 
   final double ButtonOpacity;
 
   final List<WeekDayWeatherInfo> weatherInfos;
+  final Function onRefreshFunc;
 
+  @override
+  _CurrentWeekInfoState createState() => _CurrentWeekInfoState();
+}
+
+class _CurrentWeekInfoState extends State<CurrentWeekInfo> {
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -81,22 +88,56 @@ class CurrentWeekInfo extends StatelessWidget {
         child: ListView.separated(
           padding: EdgeInsets.symmetric(horizontal: 20.0),
           itemBuilder: (BuildContext context, int index) {
-            return Padding(
-              padding: const EdgeInsets.symmetric(
-                vertical: 20.0,
-              ),
-              child: Container(
-                height: 50,
-                child: Row(
-                  children: <Widget>[
-                    
-                    // Day of week
-                    Expanded(
+            return Container(
+              height: 85,
+              child: Row(
+                children: <Widget>[
+
+                  // Day of week
+                  Expanded(
+                    child: Row(
+                      children: <Widget>[
+                        RichText(
+                          text: TextSpan(
+                            text: DateFormat('EEEE').format(widget.weatherInfos[index].date),
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'HelveticaNeueLight',
+                              fontSize: 14.0,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+
+                  Expanded(
                       child: Row(
                         children: <Widget>[
+
+                          // Icon
+                          Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 50),
+                            child: Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                    image: ExactAssetImage('assets/weather-icons/' +
+                                        widget.weatherInfos[index].averageIconName  + '.png'),
+                                    fit: BoxFit.fill
+                                ),
+                                shape: BoxShape.rectangle,
+                              ),
+                            ),
+                          ),
+
+                          // Temperature min
                           RichText(
                             text: TextSpan(
-                              text: DateFormat('EEEE').format(weatherInfos[index].date),
+                              text: widget.weatherInfos[index].tempMin.toString(),
                               style: TextStyle(
                                 color: Colors.white,
                                 fontFamily: 'HelveticaNeueLight',
@@ -105,74 +146,30 @@ class CurrentWeekInfo extends StatelessWidget {
                               ),
                             ),
                           ),
+
+                          // Temperature max
+                          Padding(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5.0,
+                            ),
+                            child: RichText(
+                              text: TextSpan(
+                                text: widget.weatherInfos[index].tempMax.toString(),
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontFamily: 'HelveticaNeueLight',
+                                  fontSize: 14.0,
+                                  fontWeight: FontWeight.w400,
+                                ),
+                              ),
+                            ),
+                          ),
                         ],
-                      ),
-                    ),
+                        mainAxisAlignment: MainAxisAlignment.end,
+                      )
+                  ),
 
-
-                    Expanded(
-                        child: Row(
-                          children: <Widget>[
-
-                            // Icon
-                            Padding(
-                              padding: const EdgeInsets.symmetric(horizontal: 50),
-                              child: Container(
-                                width: 20,
-                                height: 20,
-                                decoration: BoxDecoration(
-                                  image: DecorationImage(
-                                      image: ExactAssetImage('assets/weather-icons/' +
-                                          weatherInfos[index].averageIconName  + '.png'),
-                                      fit: BoxFit.fill
-                                  ),
-                                  shape: BoxShape.rectangle,
-                                ),
-                              ),
-                            ),
-
-                            // Temperature min
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 5.0,
-                              ),
-                              child: RichText(
-                                text: TextSpan(
-                                  text: weatherInfos[index].tempMin.toString(),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontFamily: 'HelveticaNeueLight',
-                                    fontSize: 14.0,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ),
-                            ),
-
-                            // Temperature max
-                            Padding(
-                              padding: const EdgeInsets.symmetric(
-                                horizontal: 5.0,
-                              ),
-                              child: RichText(
-                                text: TextSpan(
-                                  text: weatherInfos[index].tempMax.toString(),
-                                  style: TextStyle(
-                                    color: Colors.white,
-                                    fontFamily: 'HelveticaNeueLight',
-                                    fontSize: 14.0,
-                                    fontWeight: FontWeight.w400,
-                                  ),
-                                ),
-                              ),
-                            ),
-                          ],
-                          mainAxisAlignment: MainAxisAlignment.end,
-                        )
-                    ),
-
-                  ],
-                ),
+                ],
               ),
             );
           },
@@ -183,16 +180,16 @@ class CurrentWeekInfo extends StatelessWidget {
               ),
               child: Container(
                 height: 1,
-                color: Colors.white.withOpacity(ButtonOpacity),
+                color: Colors.white.withOpacity(widget.ButtonOpacity),
               ),
             );
           },
-          itemCount: weatherInfos.length,
+          itemCount: widget.weatherInfos.length,
           physics: AlwaysScrollableScrollPhysics(
             parent: BouncingScrollPhysics(),
           ),
         ),
-        onRefresh: () { return Future.delayed(new Duration(seconds: 3)); },
+        onRefresh: widget.onRefreshFunc,
         displacement: 0,
         color: Colors.white,
         backgroundColor: Colors.transparent,
