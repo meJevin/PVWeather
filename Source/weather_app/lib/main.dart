@@ -630,7 +630,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         Padding(
                           padding: const EdgeInsets.only(
                             top: 15.0,
-                            left: 15.0,
+                            left: 10.0,
                           ),
                           child: Align(
                             alignment: Alignment.centerLeft,
@@ -644,8 +644,8 @@ class _MyHomePageState extends State<MyHomePage> {
                                     children: <Widget>[
                                       // Icon
                                       Container(
-                                        width: 65,
-                                        height: 65,
+                                        width: 75,
+                                        height: 75,
                                         decoration: BoxDecoration(
                                           image: DecorationImage(
                                               image: ExactAssetImage('assets/weather-icons/' + currentWeatherIconName + '.png'),
@@ -668,7 +668,7 @@ class _MyHomePageState extends State<MyHomePage> {
                                             style: TextStyle(
                                               color: Colors.white,
                                               fontFamily: 'HelveticaNeueLight',
-                                              fontSize: 65.0,
+                                              fontSize: 75.0,
                                               fontWeight: FontWeight.w300,
                                             ),
                                           ),
