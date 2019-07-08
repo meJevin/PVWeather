@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 
 import 'package:intl/date_symbol_data_local.dart';
+import 'package:weather_app/weatherInfoSmall.dart';
 
 import 'main.dart';
 
@@ -19,6 +20,8 @@ class WeekDayWeatherInfo {
 
   DateTime date;
 
+  List<DayWeatherInfo> weatherInfo;
+
   WeekDayWeatherInfo.FromDayWeatherInfoList(List<DayWeatherInfo> list){
 
     if (list.length == 0){
@@ -27,6 +30,11 @@ class WeekDayWeatherInfo {
       this.averageIconName = "windy";
       this.date = DateTime(1900);
       return;
+    }
+
+    weatherInfo = [];
+    for (int i = 0; i < list.length; ++i){
+      weatherInfo.add(list[i]);
     }
 
     int tempMinCurr = list[0].temp;
@@ -94,99 +102,129 @@ class _CurrentWeekInfoState extends State<CurrentWeekInfo> {
         child: ListView.separated(
           padding: EdgeInsets.symmetric(horizontal: 20.0),
           itemBuilder: (BuildContext context, int index) {
-            return Container(
-              height: 85,
-              child: Row(
-                children: <Widget>[
+            return ExpansionTile(
+              trailing: Container(
+                width: 0,
+                height: 0,
+              ),
+              title: Container(
+                height: 80,
+                child: Row(
+                  children: <Widget>[
 
-                  // Day of week
-                  Expanded(
-                    child: Row(
-                      children: <Widget>[
-                        RichText(
-                          text: TextSpan(
-                            text:
-                            capitalize(
-                            DateFormat('EEEE',
-                                Localizations.localeOf(context).toString()).format(widget.weatherInfos[index].date)),
-                            style: TextStyle(
-                              color: Colors.white,
-                              fontFamily: 'HelveticaNeueLight',
-                              fontSize: 14.0,
-                              fontWeight: FontWeight.w400,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-
-
-                  Expanded(
+                    // Day of week
+                    Expanded(
                       child: Row(
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
                         children: <Widget>[
-
-                          // Icon
-                          Container(
-                            width: 20,
-                            height: 20,
-                            decoration: BoxDecoration(
-                              image: DecorationImage(
-                                  image: ExactAssetImage('assets/weather-icons/' +
-                                      widget.weatherInfos[index].averageIconName  + '.png'),
-                                  fit: BoxFit.fill
+                          RichText(
+                            text: TextSpan(
+                              text:
+                              capitalize(
+                              DateFormat('EEEE',
+                                  Localizations.localeOf(context).toString()).format(widget.weatherInfos[index].date)),
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontFamily: 'HelveticaNeueLight',
+                                fontSize: 14.0,
+                                fontWeight: FontWeight.w400,
                               ),
-                              shape: BoxShape.rectangle,
                             ),
                           ),
+                        ],
+                      ),
+                    ),
 
-                          Expanded(
-                            child: Row(
-                              crossAxisAlignment: CrossAxisAlignment.baseline,
-                              textBaseline: TextBaseline.alphabetic,
-                              mainAxisAlignment: MainAxisAlignment.end,
-                              children: <Widget>[
 
-                                // Temperature max
-                                RichText(
-                                  text: TextSpan(
-                                    text: widget.weatherInfos[index].tempMax.toString() + "°",
-                                    style: TextStyle(
-                                      color: Colors.white,
-                                      fontFamily: 'HelveticaNeueLight',
-                                      fontSize: 20.0,
-                                      fontWeight: FontWeight.w400,
-                                    ),
-                                  ),
+                    Expanded(
+                        child: Row(
+                          crossAxisAlignment: CrossAxisAlignment.baseline,
+                          textBaseline: TextBaseline.alphabetic,
+                          children: <Widget>[
+
+                            // Icon
+                            Container(
+                              width: 20,
+                              height: 20,
+                              decoration: BoxDecoration(
+                                image: DecorationImage(
+                                    image: ExactAssetImage('assets/weather-icons/' +
+                                        widget.weatherInfos[index].averageIconName  + '.png'),
+                                    fit: BoxFit.fill
                                 ),
+                                shape: BoxShape.rectangle,
+                              ),
+                            ),
 
+                            Expanded(
+                              child: Row(
+                                crossAxisAlignment: CrossAxisAlignment.baseline,
+                                textBaseline: TextBaseline.alphabetic,
+                                mainAxisAlignment: MainAxisAlignment.end,
+                                children: <Widget>[
 
-                                // Temperature min
-                                Padding(
-                                  padding: const EdgeInsets.only(left: 10),
-                                  child: RichText(
+                                  // Temperature max
+                                  RichText(
                                     text: TextSpan(
-                                      text: widget.weatherInfos[index].tempMin.toString() + "°",
+                                      text: widget.weatherInfos[index].tempMax.toString() + "°",
                                       style: TextStyle(
-                                        color: Colors.white.withOpacity(widget.TextOpacity),
+                                        color: Colors.white,
                                         fontFamily: 'HelveticaNeueLight',
-                                        fontSize: 16.0,
+                                        fontSize: 20.0,
                                         fontWeight: FontWeight.w400,
                                       ),
                                     ),
                                   ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      )
-                  ),
 
-                ],
+
+                                  // Temperature min
+                                  Padding(
+                                    padding: const EdgeInsets.only(left: 10),
+                                    child: RichText(
+                                      text: TextSpan(
+                                        text: widget.weatherInfos[index].tempMin.toString() + "°",
+                                        style: TextStyle(
+                                          color: Colors.white.withOpacity(widget.TextOpacity),
+                                          fontFamily: 'HelveticaNeueLight',
+                                          fontSize: 16.0,
+                                          fontWeight: FontWeight.w400,
+                                        ),
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        )
+                    ),
+
+                  ],
+                ),
               ),
+              children: <Widget>[
+                Container(
+                  height: 125,
+                  child: ListView.separated(
+                    scrollDirection: Axis.horizontal,
+                    itemCount: widget.weatherInfos[index].weatherInfo.length,
+                    physics: BouncingScrollPhysics(),
+                    itemBuilder: (BuildContext context, int indexHourWeather) {
+                      return WeatherInfoSmall(
+                        timeHour: widget.weatherInfos[index].weatherInfo[indexHourWeather].hourOfDay,
+                        TextOpacity: 0.5,
+                        temp: widget.weatherInfos[index].weatherInfo[indexHourWeather].temp,
+                        iconName: GetIconNameByCode(widget.weatherInfos[index].weatherInfo[indexHourWeather].weatherCode,
+                            widget.weatherInfos[index].weatherInfo[indexHourWeather].IsNightTimeAt(widget.weatherInfos[index].weatherInfo[indexHourWeather].hourOfDay)),
+                      );
+                    },
+                    separatorBuilder: (BuildContext context, int index) {
+                      return Container(
+                        width: 25,
+                      );
+                    },
+                  ),
+                ),
+              ],
             );
           },
           separatorBuilder: (BuildContext context, int index) {

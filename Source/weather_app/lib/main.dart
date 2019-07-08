@@ -281,7 +281,7 @@ class _MyHomePageState extends State<MyHomePage> {
     } catch (e) {
       currentLocation = null;
     }
-    //return debugCoords[0];
+    //return debugCoords[1];
     return Coordinates(currentLocation["latitude"], currentLocation["longitude"]);
   }
 
@@ -302,12 +302,8 @@ class _MyHomePageState extends State<MyHomePage> {
         currentLocale.toString());
   }
 
-  bool isUpdatingLocation = true;
-  bool isUpdatigCurrentWeather = true;
-
   Future<Null> UpdateLocation() async {
     setState(() {
-      isUpdatingLocation = true;
       print("Updating location");
       GetLocation().then((value) {
         setState(() {
@@ -329,7 +325,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
               UpdateCurrentWeather();
               print("Finished updating location");
-              isUpdatingLocation = false;
             });
           });
         });
@@ -339,7 +334,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   void UpdateCurrentWeather() async {
     setState(() {
-      isUpdatigCurrentWeather = true;
       print("Updating current weather");
       GetCurrentWeather(http.Client()).then((value) {
         setState(() {
@@ -367,7 +361,6 @@ class _MyHomePageState extends State<MyHomePage> {
           currentWeatherIconName = GetIconNameByCode(weatherConditionID, nightTime);
 
           print("Finished current weather");
-          isUpdatigCurrentWeather = false;
 
           UpdateCurrentWeatherPreditions();
         });
@@ -397,8 +390,8 @@ class _MyHomePageState extends State<MyHomePage> {
               (weatherPreditions[i]["main"]["humidity"]).toInt(),
               (weatherPreditions[i]["wind"]["speed"]).toDouble(),
               (weatherPreditions[i]["weather"][0]["id"]).toString(),
-              null,
-              null,
+              currentSunset,
+              currentSunrise,
               time.hour,
               time,
             ));
@@ -407,8 +400,6 @@ class _MyHomePageState extends State<MyHomePage> {
           currentWeatherInfos.clear();
 
           for (int i = 0; i < currentWeatherInfoCount; ++i){
-            weatherInfos[i].sunset = currentSunset;
-            weatherInfos[i].sunrise = currentSunrise;
             currentWeatherInfos.add(weatherInfos[i]);
           }
 
@@ -424,7 +415,7 @@ class _MyHomePageState extends State<MyHomePage> {
               ++i;
             }
 
-            if (dayWeatherInfo.length > 4){
+            if (dayWeatherInfo.length > 0){
               weekWeatherInfos.add(WeekDayWeatherInfo.FromDayWeatherInfoList(dayWeatherInfo));
             }
           }
@@ -586,7 +577,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           child:
                           Align(
                             alignment: Alignment.centerLeft,
-                            child: !isUpdatingLocation ?
+                            child:
                             Column(
                                 children: <Widget>[
                                   Align(
@@ -619,10 +610,6 @@ class _MyHomePageState extends State<MyHomePage> {
                                   ),
                                 ]
                             )
-                                :
-                            CircularProgressIndicator(
-                              valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
                           ),
                         ),
 
@@ -634,7 +621,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                           child: Align(
                             alignment: Alignment.centerLeft,
-                            child: !isUpdatigCurrentWeather ?
+                            child:
                             Column(
                               children: <Widget>[
                                 // Icon, Temperature
@@ -726,10 +713,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
                               ],
                             )
-                                :
-                            CircularProgressIndicator(
-                              valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),
-                            ),
                           ),
                         ),
                       ],
