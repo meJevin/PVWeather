@@ -25,6 +25,7 @@ class CurrentDayInfo extends StatefulWidget {
   final String windSpeed;
   final String percipitation;
 
+
   List<DayWeatherInfo> weatherInfos;
 
   @override

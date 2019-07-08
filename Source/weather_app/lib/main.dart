@@ -258,6 +258,7 @@ class _MyHomePageState extends State<MyHomePage> {
   ];
 
   Future<Coordinates> GetLocation() async {
+    //await Future.delayed(Duration(seconds: 5));
     var currentLocation = <String, double>{};
     try {
       currentLocation = await location.getLocation();
@@ -269,10 +270,12 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<http.Response> GetCurrentWeather(http.Client client) async {
+    //await Future.delayed(Duration(seconds: 5));
     return client.get('http://api.openweathermap.org/data/2.5/weather?lat=' + userCoords.latitude.toString() + '&lon=' + userCoords.longitude.toString() + '&appid=' + weatherAPIKey + '&mode=json&units=metric');
   }
 
   Future<http.Response> Get5Day3HourPreditions(http.Client client) async {
+    //await Future.delayed(Duration(seconds: 5));
     return client.get('http://api.openweathermap.org/data/2.5/forecast?lat=' + userCoords.latitude.toString() + '&lon=' + userCoords.longitude.toString() + '&appid=' + weatherAPIKey + '&mode=json&units=metric');
   }
 
@@ -388,26 +391,21 @@ class _MyHomePageState extends State<MyHomePage> {
 
           weekWeatherInfos.clear();
 
-          for (int i = 0; i < weatherInfos.length; ++i){
+          for (int i = 0; i < weatherInfos.length;){
             List<DayWeatherInfo> dayWeatherInfo = [];
 
             int currDay = weatherInfos[i].date.day;
             while (currDay == weatherInfos[i].date.day){
               dayWeatherInfo.add(weatherInfos[i]);
 
-              if (i == weatherInfos.length - 1){
-                weekWeatherInfos.add(WeekDayWeatherInfo.FromDayWeatherInfoList(dayWeatherInfo));
-                break;
-              }
               ++i;
             }
+
+            weekWeatherInfos.add(WeekDayWeatherInfo.FromDayWeatherInfoList(dayWeatherInfo));
 
             if (i == weatherInfos.length - 1){
               break;
             }
-
-            // Info for that day
-            weekWeatherInfos.add(WeekDayWeatherInfo.FromDayWeatherInfoList(dayWeatherInfo));
           }
 
           setState(() {
@@ -613,7 +611,8 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                           child: Align(
                             alignment: Alignment.centerLeft,
-                            child: Column(
+                            child: !isUpdatigCurrentWeather ?
+                            Column(
                               children: <Widget>[
                                 // Icon, Temperature
                                 Align(
@@ -718,6 +717,10 @@ class _MyHomePageState extends State<MyHomePage> {
 
 
                               ],
+                            )
+                                :
+                            CircularProgressIndicator(
+                              valueColor: new AlwaysStoppedAnimation<Color>(Colors.white),
                             ),
                           ),
                         ),
