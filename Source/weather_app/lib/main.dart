@@ -395,17 +395,13 @@ class _MyHomePageState extends State<MyHomePage> {
             List<DayWeatherInfo> dayWeatherInfo = [];
 
             int currDay = weatherInfos[i].date.day;
-            while (currDay == weatherInfos[i].date.day){
+            while (i < weatherInfos.length && currDay == weatherInfos[i].date.day){
               dayWeatherInfo.add(weatherInfos[i]);
 
               ++i;
             }
 
             weekWeatherInfos.add(WeekDayWeatherInfo.FromDayWeatherInfoList(dayWeatherInfo));
-
-            if (i == weatherInfos.length - 1){
-              break;
-            }
           }
 
           setState(() {
