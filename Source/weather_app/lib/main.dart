@@ -20,16 +20,83 @@ enum WeatherInfo { Today, Week }
 void main() => runApp(MyApp());
 
 String GetIconNameByCode(String weatherConditionID, bool isNightTime){
-  if (weatherConditionID.startsWith('2')){
+  int conditionNumerical = int.parse(weatherConditionID);
+
+  // Look at https://openweathermap.org/weather-conditions
+
+  if (conditionNumerical >= 200 && conditionNumerical <= 232){
     // Thunder
-    return "thunder";
-  } else if (weatherConditionID.startsWith('5')){
+    if (conditionNumerical == 211
+    || conditionNumerical == 212
+    || conditionNumerical == 232) {
+      return "thunder";
+    }
+    else {
+      return "cloudy";
+    }
+  }
+  else if (conditionNumerical >= 300 && conditionNumerical <= 321) {
+    // Drizzle
+    if (conditionNumerical == 302
+        || conditionNumerical == 311
+        || conditionNumerical == 312) {
+      return "rain";
+    }
+    else {
+      if (isNightTime){
+        return "partly-cloudy-night";
+      } else {
+        return "partly-cloudy";
+      }
+    }
+  }
+  else if (weatherConditionID.startsWith('5')) {
     // Rain
-    return "rain";
-  } else if (weatherConditionID.startsWith('6')){
+    if (conditionNumerical == 502
+        || conditionNumerical == 503
+        || conditionNumerical == 504
+        || conditionNumerical == 511
+        || conditionNumerical == 522) {
+      return "rain";
+    }
+    else {
+      if (isNightTime) {
+        return "partly-cloudy-night";
+      } else {
+        return "partly-cloudy";
+      }
+    }
+  }
+  else if (weatherConditionID.startsWith('6')){
     // Snow
-    return "snow";
-  } else if (weatherConditionID == "800"){
+    if (conditionNumerical == 601
+        || conditionNumerical == 602
+        || conditionNumerical == 616
+        || conditionNumerical == 622) {
+      return "snow";
+    }
+    else {
+      if (isNightTime) {
+        return "partly-cloudy-night";
+      } else {
+        return "partly-cloudy";
+      }
+    }
+  }
+  else if (weatherConditionID.startsWith('7')){
+    if (conditionNumerical == 701
+        || conditionNumerical == 741) {
+      return "cloudy";
+    }
+    else {
+      if (isNightTime) {
+        return "partly-cloudy-night";
+      } else {
+        return "partly-cloudy";
+      }
+    }
+  }
+  else if (weatherConditionID == "800"){
     // Clear
     if (isNightTime){
       // Clear night
@@ -137,6 +204,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   final String weatherAPIKey = '4e2b4a7ea0807694fe91fae168ba5cd2';
 
+  // For today
+
   String currentTemp = '';
   String currentWeatherDescription = '';
   String currentHumidity = '';
@@ -147,6 +216,9 @@ class _MyHomePageState extends State<MyHomePage> {
   DateTime currentSunset = DateTime.utc(1900);
   List<DayWeatherInfo> currentWeatherInfos = [];
   int currentWeatherInfoCount = ((24 / 3) + 1).toInt();
+
+  // For week
+  List<WeekDayWeatherInfo> weekWeatherInfos = [];
 
   final PageController bottomPartPageController = PageController(
     initialPage: 0,
@@ -179,10 +251,10 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   List<Coordinates> debugCoords = [
-    Coordinates(55.837013, 37.936152),
-    Coordinates(49.835099, 24.013943),
-    Coordinates(55.897453, 37.438156),
-    Coordinates(37.178451, -93.274921),
+    Coordinates(55.837013, 37.936152), // Me
+    Coordinates(49.835099, 24.013943), // Lviv
+    Coordinates(30.301202, -97.7162647), // Austin
+    Coordinates(37.178451, -93.274921), // Springfield
   ];
 
   Future<Coordinates> GetLocation() async {
@@ -192,7 +264,7 @@ class _MyHomePageState extends State<MyHomePage> {
     } catch (e) {
       currentLocation = null;
     }
-    return debugCoords[1];
+    return debugCoords[0];
     return Coordinates(currentLocation["latitude"], currentLocation["longitude"]);
   }
 
@@ -312,6 +384,30 @@ class _MyHomePageState extends State<MyHomePage> {
             weatherInfos[i].sunset = currentSunset;
             weatherInfos[i].sunrise = currentSunrise;
             currentWeatherInfos.add(weatherInfos[i]);
+          }
+
+          weekWeatherInfos.clear();
+
+          for (int i = 0; i < weatherInfos.length; ++i){
+            List<DayWeatherInfo> dayWeatherInfo = [];
+
+            int currDay = weatherInfos[i].date.day;
+            while (currDay == weatherInfos[i].date.day){
+              dayWeatherInfo.add(weatherInfos[i]);
+
+              if (i == weatherInfos.length - 1){
+                weekWeatherInfos.add(WeekDayWeatherInfo.FromDayWeatherInfoList(dayWeatherInfo));
+                break;
+              }
+              ++i;
+            }
+
+            if (i == weatherInfos.length - 1){
+              break;
+            }
+
+            // Info for that day
+            weekWeatherInfos.add(WeekDayWeatherInfo.FromDayWeatherInfoList(dayWeatherInfo));
           }
 
           setState(() {
@@ -640,7 +736,7 @@ class _MyHomePageState extends State<MyHomePage> {
                         CurrentDayInfo(startTimeHour: startTimeHour, TextOpacity: TextOpacity, ButtonOpacity: ButtonOpacity,
                         humidity: currentHumidity, windSpeed: currentWindSpeed, percipitation: currentPrecipitation,
                         weatherInfos: currentWeatherInfos,),
-                        CurrentWeekInfo(ButtonOpacity: ButtonOpacity),
+                        CurrentWeekInfo(ButtonOpacity: ButtonOpacity, weatherInfos: weekWeatherInfos,),
                       ],
                       physics: BouncingScrollPhysics(),
                       onPageChanged: (int index) {
