@@ -281,7 +281,7 @@ class _MyHomePageState extends State<MyHomePage> {
     } catch (e) {
       currentLocation = null;
     }
-    return debugCoords[0];
+    //return debugCoords[0];
     return Coordinates(currentLocation["latitude"], currentLocation["longitude"]);
   }
 
