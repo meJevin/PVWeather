@@ -203,6 +203,9 @@ class MyHomePage extends StatefulWidget {
 
 class _MyHomePageState extends State<MyHomePage> {
 
+  String todayString;
+  String weekString;
+
   Locale currentLocale;
 
   Location location = Location();
@@ -444,6 +447,15 @@ class _MyHomePageState extends State<MyHomePage> {
 
     currentLocale = Localizations.localeOf(context);
 
+    if (currentLocale.toString().contains("ru")) {
+      todayString = "Сегодня";
+      weekString = "Неделя";
+    }
+    else {
+      todayString = "Today";
+      weekString = "Week";
+    }
+
     return Scaffold(
       body: Stack(
         fit: StackFit.expand,
@@ -504,7 +516,7 @@ class _MyHomePageState extends State<MyHomePage> {
                           ),
                           child: RichText(
                             text: TextSpan(
-                              text: 'Today',
+                              text: todayString,
                               style: TextStyle(
                                 color: currentInfo == WeatherInfo.Today ? Colors.white : Colors.black.withOpacity(ButtonOpacity),
                                 fontFamily: 'HelveticaNeueLight',
@@ -538,7 +550,7 @@ class _MyHomePageState extends State<MyHomePage> {
                             ),
                             child: RichText(
                               text: TextSpan(
-                                text: 'Week',
+                                text: weekString,
                                 style: TextStyle(
                                   color: currentInfo == WeatherInfo.Week ? Colors.white : Colors.black.withOpacity(ButtonOpacity),
                                   fontFamily: 'HelveticaNeueLight',
