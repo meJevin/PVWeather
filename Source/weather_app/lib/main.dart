@@ -175,6 +175,9 @@ class MyApp extends StatelessWidget {
     return MaterialApp(
       title: 'Weather App',
       debugShowCheckedModeBanner: false,
+      theme: new ThemeData(
+        dividerColor: Colors.transparent,
+      ),
       home: MyHomePage(),
       localizationsDelegates: [
         // ... app-specific localization delegate[s] here
