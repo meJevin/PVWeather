@@ -502,25 +502,30 @@ class _MyHomePageState extends State<MyHomePage> {
                     left: 10.0,
                   ),
                   child: Row(
+                    mainAxisAlignment: MainAxisAlignment.end,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      Padding(
-                        padding: const EdgeInsets.only(top: 25),
-                        child: MediaQuery.of(context).orientation == Orientation.landscape ?
-                        CurrentDayShortInfo(
-                            locality: locality,
-                            adminArea: adminArea,
-                            country: country,
-                            TextOpacity: TextOpacity,
-                            currentWeatherIconName: currentWeatherIconName,
-                            currentTemp: currentTemp,
-                            currentWeatherDescription: currentWeatherDescription
-                        )
-                        :
-                        Container(
-                          width: 0,
-                          height: 0,
-                          color: Colors.blue,
+                      Expanded(
+                        child: Padding(
+                          padding: EdgeInsets.only(
+                              top: MediaQuery.of(context).orientation == Orientation.landscape ? 10 : 25
+                          ),
+                          child: MediaQuery.of(context).orientation == Orientation.landscape ?
+                          CurrentDayShortInfo(
+                              locality: locality,
+                              adminArea: adminArea,
+                              country: country,
+                              TextOpacity: TextOpacity,
+                              currentWeatherIconName: currentWeatherIconName,
+                              currentTemp: currentTemp,
+                              currentWeatherDescription: currentWeatherDescription
+                          )
+                          :
+                          Container(
+                            width: 0,
+                            height: 0,
+                            color: Colors.blue,
+                          ),
                         ),
                       ),
                       // Today button
@@ -591,7 +596,6 @@ class _MyHomePageState extends State<MyHomePage> {
                             }
                         ),
                       ),
-
                     ],
                   ),
                 ),
