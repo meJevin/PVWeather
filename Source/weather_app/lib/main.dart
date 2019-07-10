@@ -504,7 +504,27 @@ class _MyHomePageState extends State<MyHomePage> {
                     left: 10.0,
                   ),
                   child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
+                      Padding(
+                        padding: const EdgeInsets.only(top: 25),
+                        child: MediaQuery.of(context).orientation == Orientation.landscape ?
+                        CurrentDayShortInfo(
+                            locality: locality,
+                            adminArea: adminArea,
+                            country: country,
+                            TextOpacity: TextOpacity,
+                            currentWeatherIconName: currentWeatherIconName,
+                            currentTemp: currentTemp,
+                            currentWeatherDescription: currentWeatherDescription
+                        )
+                        :
+                        Container(
+                          width: 0,
+                          height: 0,
+                          color: Colors.blue,
+                        ),
+                      ),
                       // Today button
                       Padding(
                         padding: const EdgeInsets.only(
@@ -514,29 +534,29 @@ class _MyHomePageState extends State<MyHomePage> {
                           bottom: 0.0,
                         ),
                         child: FlatButton(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(6),
-                          ),
-                          child: RichText(
-                            text: TextSpan(
-                              text: todayString,
-                              style: TextStyle(
-                                color: currentInfo == WeatherInfo.Today ? Colors.white : Colors.black.withOpacity(ButtonOpacity),
-                                fontFamily: 'HelveticaNeueLight',
-                                fontSize: 16.0,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(6),
+                            ),
+                            child: RichText(
+                              text: TextSpan(
+                                text: todayString,
+                                style: TextStyle(
+                                  color: currentInfo == WeatherInfo.Today ? Colors.white : Colors.black.withOpacity(ButtonOpacity),
+                                  fontFamily: 'HelveticaNeueLight',
+                                  fontSize: 16.0,
+                                ),
                               ),
                             ),
-                          ),
-                          color: currentInfo == WeatherInfo.Today ? Colors.white.withOpacity(ButtonOpacity) : Colors.black.withOpacity(ButtonOpacity),
-                          highlightColor: Colors.white.withOpacity(0.1),
-                          splashColor: Colors.transparent,
-                          onPressed: (){
-                            if (SwitchToToday()){
-                              setState(() {
+                            color: currentInfo == WeatherInfo.Today ? Colors.white.withOpacity(ButtonOpacity) : Colors.black.withOpacity(ButtonOpacity),
+                            highlightColor: Colors.white.withOpacity(0.1),
+                            splashColor: Colors.transparent,
+                            onPressed: (){
+                              if (SwitchToToday()){
+                                setState(() {
 
-                              });
+                                });
+                              }
                             }
-                          }
                         ),
                       ),
                       // Week button
@@ -573,165 +593,28 @@ class _MyHomePageState extends State<MyHomePage> {
                             }
                         ),
                       ),
+
                     ],
                   ),
                 ),
 
                 Expanded(
-                  flex: 8,
-                  child: Container(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.center,
-                      children: <Widget>[
-                        // Location Text
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            left: 20.0,
-                          ),
-                          child:
-                          Align(
-                            alignment: Alignment.centerLeft,
-                            child:
-                            Column(
-                                children: <Widget>[
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: RichText(
-                                      text: TextSpan(
-                                        text: locality,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontFamily: 'HelveticaNeueLight',
-                                          fontSize: 24.0,
-                                          fontWeight: FontWeight.w700,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                  Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: RichText(
-                                      text: TextSpan(
-                                        text: (adminArea == null ? '' : (adminArea + ', ')) + country,
-                                        style: TextStyle(
-                                          color: Colors.white.withOpacity(TextOpacity),
-                                          fontFamily: 'HelveticaNeueLight',
-                                          fontSize: 13.0,
-                                          fontWeight: FontWeight.w500,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ]
-                            )
-                          ),
-                        ),
-
-                        // Weather Description with Icon & Temperature
-                        Padding(
-                          padding: const EdgeInsets.only(
-                            top: 15.0,
-                            left: 10.0,
-                          ),
-                          child: Align(
-                            alignment: Alignment.centerLeft,
-                            child:
-                            Column(
-                              children: <Widget>[
-                                // Icon, Temperature
-                                Align(
-                                  alignment: Alignment.centerLeft,
-                                  child: Row(
-                                    children: <Widget>[
-                                      // Icon
-                                      Container(
-                                        width: 75,
-                                        height: 75,
-                                        decoration: BoxDecoration(
-                                          image: DecorationImage(
-                                              image: ExactAssetImage('assets/weather-icons/' + currentWeatherIconName + '.png'),
-                                              fit: BoxFit.fill
-                                          ),
-                                          shape: BoxShape.rectangle,
-                                        ),
-                                      ),
-
-
-                                      // Current Temperature
-                                      Padding(
-                                        padding: EdgeInsets.only(
-                                          left: 20.0,
-                                          right: 5.0,
-                                        ),
-                                        child: RichText(
-                                          text: TextSpan(
-                                            text: currentTemp + '°C',
-                                            style: TextStyle(
-                                              color: Colors.white,
-                                              fontFamily: 'HelveticaNeueLight',
-                                              fontSize: 75.0,
-                                              fontWeight: FontWeight.w300,
-                                            ),
-                                          ),
-                                        ),
-                                      ),
-
-
-                                      //Container(
-                                      //  width: 1,
-                                      //  height: 65.0,
-                                      //  color: Colors.white.withOpacity(TextOpacity),
-                                      //),
-//
-                                      //FlatButton(
-                                      //  padding: EdgeInsets.only(right: 15.0, left: 15.0),
-                                      //  child: RichText(
-                                      //    text: TextSpan(
-                                      //      text: '°F',
-                                      //      style: TextStyle(
-                                      //        color: Colors.white.withOpacity(TextOpacity),
-                                      //        fontFamily: 'HelveticaNeueLight',
-                                      //        fontSize: 65.0,
-                                      //        fontWeight: FontWeight.w300,
-                                      //        letterSpacing: 0.0,
-                                      //      ),
-                                      //    ),
-                                      //  ),
-                                      //  onPressed: (){},
-                                      //),
-                                    ],
-                                  ),
-                                ),
-
-                                // Weather Description
-                                Padding(
-                                  padding: const EdgeInsets.only(
-                                    left: 10.0,
-                                  ),
-                                  child: Align(
-                                    alignment: Alignment.centerLeft,
-                                    child: RichText(
-                                      text: TextSpan(
-                                        text: currentWeatherDescription,
-                                        style: TextStyle(
-                                          color: Colors.white,
-                                          fontFamily: 'HelveticaNeueLight',
-                                          fontSize: 20.0,
-                                          fontWeight: FontWeight.w400,
-                                        ),
-                                      ),
-                                    ),
-                                  ),
-                                ),
-
-
-                              ],
-                            )
-                          ),
-                        ),
-                      ],
-                    ),
+                  flex: MediaQuery.of(context).orientation == Orientation.portrait ? 8 : 0,
+                  child: MediaQuery.of(context).orientation == Orientation.portrait ?
+                  CurrentDayShortInfo(
+                      locality: locality,
+                      adminArea: adminArea,
+                      country: country,
+                      TextOpacity: TextOpacity,
+                      currentWeatherIconName: currentWeatherIconName,
+                      currentTemp: currentTemp,
+                      currentWeatherDescription: currentWeatherDescription
+                  )
+                  :
+                  Container(
+                    width: 0,
+                    height: 0,
+                    color: Colors.blue,
                   ),
                 ),
 
@@ -768,6 +651,185 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           )
         ]
+      ),
+    );
+  }
+}
+
+class CurrentDayShortInfo extends StatelessWidget {
+  const CurrentDayShortInfo({
+    Key key,
+    @required this.locality,
+    @required this.adminArea,
+    @required this.country,
+    @required this.TextOpacity,
+    @required this.currentWeatherIconName,
+    @required this.currentTemp,
+    @required this.currentWeatherDescription,
+  }) : super(key: key);
+
+  final String locality;
+  final String adminArea;
+  final String country;
+  final double TextOpacity;
+  final String currentWeatherIconName;
+  final String currentTemp;
+  final String currentWeatherDescription;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          // Location Text
+          Padding(
+            padding: const EdgeInsets.only(
+              left: 20.0,
+            ),
+            child:
+            Align(
+                alignment: Alignment.centerLeft,
+                child:
+                Column(
+                    children: <Widget>[
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: RichText(
+                          text: TextSpan(
+                            text: locality,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'HelveticaNeueLight',
+                              fontSize: 24.0,
+                              fontWeight: FontWeight.w700,
+                            ),
+                          ),
+                        ),
+                      ),
+                      Align(
+                        alignment: Alignment.centerLeft,
+                        child: RichText(
+                          text: TextSpan(
+                            text: (adminArea == null ? '' : (adminArea + ', ')) + country,
+                            style: TextStyle(
+                              color: Colors.white.withOpacity(TextOpacity),
+                              fontFamily: 'HelveticaNeueLight',
+                              fontSize: 13.0,
+                              fontWeight: FontWeight.w500,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ]
+                )
+            ),
+          ),
+
+          // Weather Description with Icon & Temperature
+          Padding(
+            padding: const EdgeInsets.only(
+              top: 15.0,
+              left: 10.0,
+            ),
+            child: Align(
+                alignment: Alignment.centerLeft,
+                child:
+                Column(
+                  children: <Widget>[
+                    // Icon, Temperature
+                    Align(
+                      alignment: Alignment.centerLeft,
+                      child: Row(
+                        children: <Widget>[
+                          // Icon
+                          Container(
+                            width: 75,
+                            height: 75,
+                            decoration: BoxDecoration(
+                              image: DecorationImage(
+                                  image: ExactAssetImage('assets/weather-icons/' + currentWeatherIconName + '.png'),
+                                  fit: BoxFit.fill
+                              ),
+                              shape: BoxShape.rectangle,
+                            ),
+                          ),
+
+
+                          // Current Temperature
+                          Padding(
+                            padding: EdgeInsets.only(
+                              left: 20.0,
+                              right: 5.0,
+                            ),
+                            child: RichText(
+                              text: TextSpan(
+                                text: currentTemp + '°C',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontFamily: 'HelveticaNeueLight',
+                                  fontSize: 75.0,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                            ),
+                          ),
+
+
+                          //Container(
+                          //  width: 1,
+                          //  height: 65.0,
+                          //  color: Colors.white.withOpacity(TextOpacity),
+                          //),
+//
+                          //FlatButton(
+                          //  padding: EdgeInsets.only(right: 15.0, left: 15.0),
+                          //  child: RichText(
+                          //    text: TextSpan(
+                          //      text: '°F',
+                          //      style: TextStyle(
+                          //        color: Colors.white.withOpacity(TextOpacity),
+                          //        fontFamily: 'HelveticaNeueLight',
+                          //        fontSize: 65.0,
+                          //        fontWeight: FontWeight.w300,
+                          //        letterSpacing: 0.0,
+                          //      ),
+                          //    ),
+                          //  ),
+                          //  onPressed: (){},
+                          //),
+                        ],
+                      ),
+                    ),
+
+                    // Weather Description
+                    Padding(
+                      padding: const EdgeInsets.only(
+                        left: 10.0,
+                      ),
+                      child: Align(
+                        alignment: Alignment.centerLeft,
+                        child: RichText(
+                          text: TextSpan(
+                            text: currentWeatherDescription,
+                            style: TextStyle(
+                              color: Colors.white,
+                              fontFamily: 'HelveticaNeueLight',
+                              fontSize: 20.0,
+                              fontWeight: FontWeight.w400,
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+
+
+                  ],
+                )
+            ),
+          ),
+        ],
       ),
     );
   }
