@@ -502,7 +502,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     left: 10.0,
                   ),
                   child: Row(
-                    mainAxisAlignment: MainAxisAlignment.end,
+                    mainAxisAlignment: MediaQuery.of(context).orientation == Orientation.landscape ? MainAxisAlignment.end : MainAxisAlignment.start,
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
