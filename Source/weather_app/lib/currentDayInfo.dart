@@ -2,7 +2,7 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
-import 'package:PVWeather/weatherInfoSmall.dart';
+import 'package:weather_app/weatherInfoSmall.dart';
 import 'main.dart';
 
 class CurrentDayInfo extends StatefulWidget {
