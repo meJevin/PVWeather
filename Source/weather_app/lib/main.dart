@@ -506,6 +506,7 @@ class _MyHomePageState extends State<MyHomePage> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Expanded(
+                        flex: MediaQuery.of(context).orientation == Orientation.landscape ? 1 : 0,
                         child: Padding(
                           padding: EdgeInsets.only(
                               top: MediaQuery.of(context).orientation == Orientation.landscape ? 10 : 25
