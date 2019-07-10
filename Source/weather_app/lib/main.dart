@@ -14,7 +14,6 @@ import 'package:geocoder/geocoder.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:flutter_cupertino_localizations/flutter_cupertino_localizations.dart';
 
 import 'package:http/http.dart' as http;
 
@@ -183,7 +182,6 @@ class MyApp extends StatelessWidget {
         // ... app-specific localization delegate[s] here
         GlobalMaterialLocalizations.delegate,
         GlobalWidgetsLocalizations.delegate,
-        GlobalCupertinoLocalizations.delegate,
       ],
       supportedLocales: [
         const Locale('en'), // English
