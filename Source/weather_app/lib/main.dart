@@ -19,6 +19,32 @@ import 'package:http/http.dart' as http;
 
 enum WeatherInfo { Today, Week }
 
+class LocationInfo{
+  LocationInfo(
+      this.coordinates,
+      this.name,
+      this.selected,
+      );
+
+  Coordinates coordinates;
+  String name;
+  bool selected;
+}
+
+List<Coordinates> debugCoords = [
+  Coordinates(55.837013, 37.936152), // Me
+  Coordinates(49.835099, 24.013943), // Lviv
+  Coordinates(30.301202, -97.7162647), // Austin
+  Coordinates(37.178451, -93.274921), // Springfield
+];
+
+List<LocationInfo> debugLocationInfos = [
+  LocationInfo(null, "Current", true),
+  LocationInfo(debugCoords[1], "Lviv", false),
+  LocationInfo(debugCoords[2], "Austin", false),
+  LocationInfo(debugCoords[3], "Springfield", false),
+];
+
 void main() => runApp(MyApp());
 
 String GetIconNameByCode(String weatherConditionID, bool isNightTime){
@@ -176,6 +202,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: new ThemeData(
         dividerColor: Colors.transparent,
+        canvasColor: Color.fromARGB(180, 85, 85, 85),
       ),
       home: MyHomePage(),
       localizationsDelegates: [
@@ -211,6 +238,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
   Location location = Location();
   Coordinates userCoords;
+  Coordinates customCoords;
 
   String country = '';
   String adminArea = '';
@@ -270,13 +298,6 @@ class _MyHomePageState extends State<MyHomePage> {
     return true;
   }
 
-  List<Coordinates> debugCoords = [
-    Coordinates(55.837013, 37.936152), // Me
-    Coordinates(49.835099, 24.013943), // Lviv
-    Coordinates(30.301202, -97.7162647), // Austin
-    Coordinates(37.178451, -93.274921), // Springfield
-  ];
-
   Future<Coordinates> GetLocation() async {
     //await Future.delayed(Duration(seconds: 5));
     var currentLocation = <String, double>{};
@@ -312,6 +333,10 @@ class _MyHomePageState extends State<MyHomePage> {
       GetLocation().then((value) {
         setState(() {
           userCoords = value;
+
+          if (customCoords != null) {
+            userCoords = customCoords;
+          }
 
           Coordinates coordinates = userCoords;
           print("Coordinates: " + coordinates.latitude.toString() + ", " + coordinates.longitude.toString());
@@ -597,6 +622,60 @@ class _MyHomePageState extends State<MyHomePage> {
                             }
                         ),
                       ),
+
+                      MediaQuery.of(context).orientation == Orientation.landscape ?
+                      Padding(
+                        padding: const EdgeInsets.only(
+                          left: 5.0,
+                          top: 15.0,
+                          right: 15.0,
+                          bottom: 0.0,
+                        ),
+                        child: Builder(
+                          builder: (BuildContext context) {
+                            return IconButton(
+                              alignment: Alignment.center,
+                              onPressed: () {
+                                Scaffold.of(context).openEndDrawer();
+                              },
+                              icon: Icon(
+                                  Icons.menu,
+                                  size: 30,
+                                  color: Colors.white
+                              ),
+                            );
+                          },
+                        ),
+                      )
+                      :
+                      Expanded(
+                        child: Align(
+                          alignment: Alignment.centerRight,
+                          child: Padding(
+                            padding: const EdgeInsets.only(
+                              left: 5.0,
+                              top: 15.0,
+                              right: 15.0,
+                              bottom: 0.0,
+                            ),
+                            child: Builder(
+                              builder: (BuildContext context) {
+                                return IconButton(
+                                  alignment: Alignment.center,
+                                  onPressed: () {
+                                    Scaffold.of(context).openEndDrawer();
+                                  },
+                                  icon: Icon(
+                                      Icons.menu,
+                                      size: 30,
+                                      color: Colors.white
+                                  ),
+                                );
+                              },
+                            ),
+                          ),
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -654,6 +733,12 @@ class _MyHomePageState extends State<MyHomePage> {
             ),
           )
         ]
+      ),
+
+      endDrawer: LocationDrawer(
+        locationInfos: debugLocationInfos,
+        updateLocationFunction: UpdateLocation,
+        homePageState: this,
       ),
     );
   }
@@ -778,30 +863,6 @@ class CurrentDayShortInfo extends StatelessWidget {
                               ),
                             ),
                           ),
-
-
-                          //Container(
-                          //  width: 1,
-                          //  height: 65.0,
-                          //  color: Colors.white.withOpacity(TextOpacity),
-                          //),
-//
-                          //FlatButton(
-                          //  padding: EdgeInsets.only(right: 15.0, left: 15.0),
-                          //  child: RichText(
-                          //    text: TextSpan(
-                          //      text: '°F',
-                          //      style: TextStyle(
-                          //        color: Colors.white.withOpacity(TextOpacity),
-                          //        fontFamily: 'HelveticaNeueLight',
-                          //        fontSize: 65.0,
-                          //        fontWeight: FontWeight.w300,
-                          //        letterSpacing: 0.0,
-                          //      ),
-                          //    ),
-                          //  ),
-                          //  onPressed: (){},
-                          //),
                         ],
                       ),
                     ),
@@ -837,3 +898,110 @@ class CurrentDayShortInfo extends StatelessWidget {
     );
   }
 }
+
+class LocationDrawer extends StatefulWidget {
+
+  final List<LocationInfo> locationInfos;
+
+  final Function updateLocationFunction;
+
+  final _MyHomePageState homePageState;
+
+  LocationDrawer({
+    Key key,
+    @required this.locationInfos,
+    @required this.updateLocationFunction,
+    @required this.homePageState,
+  }) : super(key: key);
+
+  @override
+  _LocationDrawerState createState() => _LocationDrawerState();
+}
+
+class _LocationDrawerState extends State<LocationDrawer> {
+
+  void LoadLocationInfo(LocationInfo info) {
+    setState(() {
+      widget.homePageState.customCoords = info.coordinates;
+      widget.updateLocationFunction();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SafeArea(
+      child: Drawer(
+        elevation: 0,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: <Widget>[
+            Container(
+              color: Color.fromARGB(155, 35, 35, 35),
+              child: Padding(
+                padding: const EdgeInsets.only(
+                  top: 25,
+                  bottom: 25,
+                  right: 15,
+                ),
+                child: Text(
+                  'Места',
+                  textAlign: TextAlign.right,
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontFamily: 'HelveticaNeueLight',
+                    fontSize: 35.0,
+                    fontWeight: FontWeight.w300,
+                  ),
+                ),
+              ),
+            ),
+
+            Expanded(
+              flex: 4,
+              child: ListView.builder(
+                physics: AlwaysScrollableScrollPhysics(parent: BouncingScrollPhysics()),
+                padding: EdgeInsets.zero,
+                itemCount: widget.locationInfos.length,
+                itemBuilder: (BuildContext contextB, int index) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      color: widget.locationInfos[index].selected ? Color.fromARGB(185, 165, 165, 165) : Color.fromARGB(185, 45, 45, 45),
+                    ),
+                    child: ListTile(
+                      title: Align(
+                        alignment: Alignment.centerRight,
+                        child: Text(
+                          widget.locationInfos[index].name,
+                          style: TextStyle(
+                            color: widget.locationInfos[index].selected ? Colors.white : Colors.white.withOpacity(0.65),
+                            fontFamily: 'HelveticaNeueLight',
+                            fontSize: 18.0,
+                            fontWeight: widget.locationInfos[index].selected ? FontWeight.w400 : FontWeight.w300,
+                          ),
+                        ),
+                      ),
+                      onTap: () {
+                        setState(() {
+                          for (int i = 0; i < widget.locationInfos.length; ++i) {
+                            if (i == index) {
+                              widget.locationInfos[i].selected = true;
+                              LoadLocationInfo(widget.locationInfos[i]);
+                            }
+                            else {
+                              widget.locationInfos[i].selected = false;
+                            }
+                          }
+                        });
+                      },
+                    ),
+                  );
+                },
+              ),
+            ),
+          ],
+        )
+      ),
+    );
+  }
+}
+
