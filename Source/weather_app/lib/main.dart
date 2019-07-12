@@ -942,6 +942,7 @@ class _LocationDrawerState extends State<LocationDrawer> {
     setState(() {
       widget.homePageState.customCoords = info.coordinates;
       widget.updateLocationFunction();
+      widget.homePageState.SwitchToToday();
     });
   }
 
