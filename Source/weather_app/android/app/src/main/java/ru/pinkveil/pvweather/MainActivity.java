@@ -1,4 +1,4 @@
-package com.example.weather_app;
+package ru.pinkveil.pvweather;
 
 import android.os.Bundle;
 import io.flutter.app.FlutterActivity;
