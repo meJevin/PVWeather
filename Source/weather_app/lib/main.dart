@@ -265,6 +265,8 @@ class _MyHomePageState extends State<MyHomePage> {
   List<DayWeatherInfo> currentWeatherInfos = [];
   int currentWeatherInfoCount = ((24 / 3) + 1).toInt();
 
+  bool isUpdatingInfo = false;
+
   // For week
   List<WeekDayWeatherInfo> weekWeatherInfos = [];
 
@@ -328,6 +330,7 @@ class _MyHomePageState extends State<MyHomePage> {
   }
 
   Future<Null> UpdateLocation() async {
+    isUpdatingInfo = true;
     setState(() {
       print("Updating location");
       GetLocation().then((value) {
@@ -450,7 +453,7 @@ class _MyHomePageState extends State<MyHomePage> {
           }
 
           setState(() {
-
+            isUpdatingInfo = false;
           });
         });
       });
@@ -516,7 +519,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ),
 
           SafeArea(
-            child: Column(
+            child: !isUpdatingInfo ? Column(
               children: <Widget>[
 
                 // Top Buttons
@@ -730,7 +733,22 @@ class _MyHomePageState extends State<MyHomePage> {
                   )
                 ),
               ],
-            ),
+            )
+                :
+                Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: <Widget>[
+                    Container(
+                      width: 50,
+                      height: 50,
+                      child: CircularProgressIndicator(
+                        backgroundColor: Colors.white,
+                        strokeWidth: 3,
+                        valueColor: new AlwaysStoppedAnimation<Color>(Colors.blue[800].withOpacity(0.45)),
+                      ),
+                    )
+                  ],
+                ),
           )
         ]
       ),
@@ -992,6 +1010,7 @@ class _LocationDrawerState extends State<LocationDrawer> {
                             }
                           }
                         });
+                        Navigator.pop(context);
                       },
                     ),
                   );
