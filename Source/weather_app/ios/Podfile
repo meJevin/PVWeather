@@ -1,6 +1,6 @@
 
 target 'Runner' do
-
-  pod 'Firebase/Core'
+	use_frameworks!
+pod 'Firebase/Core'
 
 end
