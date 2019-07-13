@@ -492,7 +492,7 @@ class _MyHomePageState extends State<MyHomePage> {
         fit: StackFit.expand,
         children: [
 
-          MessageHandler(),
+          FCMMessageHandler(),
 
           // BG
           Stack(

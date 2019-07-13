@@ -7,12 +7,12 @@ import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
-class MessageHandler extends StatefulWidget {
+class FCMMessageHandler extends StatefulWidget {
   @override
-  _MessageHandlerState createState() => _MessageHandlerState();
+  _FCMMessageHandlerState createState() => _FCMMessageHandlerState();
 }
 
-class _MessageHandlerState extends State<MessageHandler> {
+class _FCMMessageHandlerState extends State<FCMMessageHandler> {
 
   final Firestore _db = Firestore.instance;
   final FirebaseMessaging _fcm = FirebaseMessaging();
