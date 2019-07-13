@@ -14,7 +14,7 @@ import 'package:geocoder/geocoder.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
-
+import 'package:firebase_core/firebase_core.dart';
 import 'package:http/http.dart' as http;
 
 enum WeatherInfo { Today, Week }
