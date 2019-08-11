@@ -124,7 +124,7 @@ class _CurrentWeekInfoState extends State<CurrentWeekInfo> {
                                   Localizations.localeOf(context).toString()).format(widget.weatherInfos[index].date)),
                               style: TextStyle(
                                 color: Colors.white,
-                                fontFamily: 'HelveticaNeueLight',
+                                fontFamily: 'HelveticaNeue',
                                 fontSize: 14.0,
                                 fontWeight: FontWeight.w400,
                               ),
@@ -168,7 +168,7 @@ class _CurrentWeekInfoState extends State<CurrentWeekInfo> {
                                       text: widget.weatherInfos[index].tempMax.toString() + "°",
                                       style: TextStyle(
                                         color: Colors.white,
-                                        fontFamily: 'HelveticaNeueLight',
+                                        fontFamily: 'HelveticaNeue',
                                         fontSize: 20.0,
                                         fontWeight: FontWeight.w400,
                                       ),
@@ -184,7 +184,7 @@ class _CurrentWeekInfoState extends State<CurrentWeekInfo> {
                                         text: widget.weatherInfos[index].tempMin.toString() + "°",
                                         style: TextStyle(
                                           color: Colors.white.withOpacity(widget.TextOpacity),
-                                          fontFamily: 'HelveticaNeueLight',
+                                          fontFamily: 'HelveticaNeue',
                                           fontSize: 16.0,
                                           fontWeight: FontWeight.w400,
                                         ),

@@ -35,7 +35,7 @@ class _WeatherInfoSmallState extends State<WeatherInfoSmall> {
                 text: (widget.timeHour).toString() + ':00',
                 style: TextStyle(
                   color: Colors.white.withOpacity(widget.TextOpacity),
-                  fontFamily: 'HelveticaNeueLight',
+                  fontFamily: 'HelveticaNeue',
                   fontSize: 11.0,
                   fontWeight: FontWeight.w400,
                 ),
@@ -68,7 +68,7 @@ class _WeatherInfoSmallState extends State<WeatherInfoSmall> {
                   text: widget.temp.toString() + '°',
                   style: TextStyle(
                     color: Colors.white,
-                    fontFamily: 'HelveticaNeueLight',
+                    fontFamily: 'HelveticaNeue',
                     fontSize: 22.0,
                     fontWeight: FontWeight.w400,
                   ),
