@@ -115,6 +115,8 @@ class _CurrentWeekInfoState extends State<CurrentWeekInfo> {
                     // Day of week
                     Expanded(
                       child: Row(
+                        crossAxisAlignment: CrossAxisAlignment.baseline,
+                        textBaseline: TextBaseline.alphabetic,
                         children: <Widget>[
                           RichText(
                             text: TextSpan(

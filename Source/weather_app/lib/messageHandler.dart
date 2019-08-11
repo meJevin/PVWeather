@@ -7,7 +7,19 @@ import 'dart:io';
 import 'package:firebase_messaging/firebase_messaging.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 
+import 'package:geocoder/geocoder.dart';
+
+import 'main.dart';
+
 class FCMMessageHandler extends StatefulWidget {
+  FCMMessageHandler({
+    Key key,
+    this.currentLocationInfos,
+  }) : super(key: key);
+
+
+  List<LocationInfo> currentLocationInfos;
+
   @override
   _FCMMessageHandlerState createState() => _FCMMessageHandlerState();
 }
@@ -21,17 +33,19 @@ class _FCMMessageHandlerState extends State<FCMMessageHandler> {
   void initState() {
     super.initState();
 
-    if (Platform.isIOS) {
-      _fcm.onIosSettingsRegistered.listen(
-            (data) { saveDeviceToken(); },
-      );
+    //if (Platform.isIOS) {
+    //  _fcm.onIosSettingsRegistered.listen(
+    //        (data) { saveDeviceToken(); },
+    //  );
+//
+    //  _fcm.requestNotificationPermissions(
+    //      IosNotificationSettings()
+    //  );
+    //} else {
+    //  saveDeviceToken();
+    //}
 
-      _fcm.requestNotificationPermissions(
-          IosNotificationSettings()
-      );
-    } else {
-      saveDeviceToken();
-    }
+    saveDeviceToken();
 
     _fcm.configure(
       onMessage: (Map<String, dynamic> message) async {
@@ -56,22 +70,35 @@ class _FCMMessageHandlerState extends State<FCMMessageHandler> {
   saveDeviceToken() async {
     //FirebaseUser user = await _auth.currentUser();
 
-    String uid = 'test';
-
     String fcmToken = await _fcm.getToken();
 
     if (fcmToken != null) {
       var tokenRef = _db
           .collection('users')
-          .document(uid)
-          .collection('tokens')
-          .document(fcmToken);
+          .document(fcmToken)
+          .collection('places');
 
-      await tokenRef.setData({
-        'token': fcmToken,
-        'createdAt': FieldValue.serverTimestamp(),
-        'platform': Platform.operatingSystem,
+      var placecFromDB = await _db.collection('users').document(fcmToken)
+          .collection('places').getDocuments()
+          .then((value) {
+        for (int i = 0; i < value.documents.length; ++i) {
+          widget.currentLocationInfos.add(
+              LocationInfo(
+                  Coordinates(
+                      value.documents[i]['lat'],
+                      value.documents[i]['lon']
+                  ),
+                  value.documents[i]['name'],
+                  false
+              )
+          );
+          setState(() {
+
+          });
+        }
       });
+
+
     }
   }
 

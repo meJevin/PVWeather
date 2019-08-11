@@ -44,13 +44,6 @@ List<Coordinates> debugCoords = [
   Coordinates(37.178451, -93.274921), // Springfield
 ];
 
-List<LocationInfo> debugLocationInfos = [
-  LocationInfo(null, "Current", true),
-  LocationInfo(debugCoords[1], "Lviv", false),
-  LocationInfo(debugCoords[2], "Austin", false),
-  LocationInfo(debugCoords[3], "Springfield", false),
-];
-
 void main() => runApp(MyApp());
 
 String GetIconNameByCode(String weatherConditionID, bool isNightTime) {
@@ -234,8 +227,18 @@ class MyHomePage extends StatefulWidget {
 }
 
 class _MyHomePageState extends State<MyHomePage> {
+
+  List<LocationInfo> currentLocationInfos = [
+    LocationInfo(null, "Current", true),
+    //LocationInfo(debugCoords[1], "Lviv", false),
+    //LocationInfo(debugCoords[2], "Austin", false),
+    //LocationInfo(debugCoords[3], "Springfield", false),
+  ];
+
   String todayString;
   String weekString;
+  String placesString;
+  String currentPlaceString;
 
   List<String> mainUnexpectedMessages = List<String>();
   List<String> mainUnexpectedMessagesGeolocation = List<String>();
@@ -555,14 +558,20 @@ class _MyHomePageState extends State<MyHomePage> {
     if (currentLocale.toString().contains("ru")) {
       todayString = "Сегодня";
       weekString = "Неделя";
+      placesString = "Места";
+      currentPlaceString = "Моя позиция";
     } else {
       todayString = "Today";
       weekString = "Week";
+      placesString = "Places";
+      currentPlaceString = "Current position";
     }
 
     return Scaffold(
       body: Stack(fit: StackFit.expand, children: [
-        FCMMessageHandler(),
+        FCMMessageHandler(
+          currentLocationInfos: currentLocationInfos,
+        ),
 
         // BG
         Stack(
@@ -977,9 +986,10 @@ class _MyHomePageState extends State<MyHomePage> {
         )
       ]),
       endDrawer: LocationDrawer(
-        locationInfos: debugLocationInfos,
+        locationInfos: currentLocationInfos,
         updateLocationFunction: UpdateLocation,
         homePageState: this,
+        placesString: placesString,
       ),
     );
   }
@@ -1140,11 +1150,14 @@ class LocationDrawer extends StatefulWidget {
 
   final _MyHomePageState homePageState;
 
+  String placesString;
+
   LocationDrawer({
     Key key,
     @required this.locationInfos,
     @required this.updateLocationFunction,
     @required this.homePageState,
+    @required this.placesString,
   }) : super(key: key);
 
   @override
@@ -1162,14 +1175,13 @@ class _LocationDrawerState extends State<LocationDrawer> {
 
   @override
   Widget build(BuildContext context) {
-    return SafeArea(
-      child: Drawer(
-          elevation: 0,
+    return Drawer(
+        elevation: 0,
+        child: SafeArea(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
               Container(
-                color: Color.fromARGB(155, 35, 35, 35),
                 child: Padding(
                   padding: const EdgeInsets.only(
                     top: 15,
@@ -1177,7 +1189,7 @@ class _LocationDrawerState extends State<LocationDrawer> {
                     right: 15,
                   ),
                   child: Text(
-                    'Места',
+                    widget.placesString,
                     textAlign: TextAlign.right,
                     style: TextStyle(
                       color: Colors.white,
@@ -1240,7 +1252,7 @@ class _LocationDrawerState extends State<LocationDrawer> {
                 ),
               ),
             ],
-          )),
-    );
+          ),
+        ));
   }
 }
