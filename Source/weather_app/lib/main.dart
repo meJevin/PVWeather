@@ -1322,11 +1322,12 @@ class _LocationDrawerState extends State<LocationDrawer> {
                         if (countrySearchTextEditingController.text.length > 0) {
                           return IconButton(
                             icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.85)),
+                            splashColor: Colors.transparent,
+                            highlightColor: Colors.transparent,
                             iconSize: 20,
                             onPressed: () {
                               ClearSearch();
                             },
-                            splashColor: Colors.transparent,
                           );
                         } else {
                           return Container();
@@ -1361,7 +1362,15 @@ class _LocationDrawerState extends State<LocationDrawer> {
                             ),
                           );
                         } else {
-                          return Container();
+                          return Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 15.0),
+                            child: GestureDetector(
+                              onTap: () {
+                                
+                              },
+                              child: Icon(Icons.add, color: Colors.white)
+                            ),
+                          );
                         }
                       },
                     ),
@@ -1376,7 +1385,23 @@ class _LocationDrawerState extends State<LocationDrawer> {
                   builder: (BuildContext context){
                     if (countrySearchString != "" && searchResultLocationInfos.length == 0) {
 
-                      return Container();
+                      return Container(
+                        child: Column(
+                          children: <Widget>[
+                            Padding(
+                              padding: const EdgeInsets.only(top: 10),
+                              child: Text('No results!',
+                                style:  TextStyle(
+                                  color: Colors.white.withOpacity(0.85),
+                                  fontFamily: 'HelveticaNeue',
+                                  fontSize: 16.0,
+                                  fontWeight: FontWeight.w300,
+                                ),
+                              ),
+                            )
+                          ],
+                        ),
+                      );
 
                     }
                     else {
