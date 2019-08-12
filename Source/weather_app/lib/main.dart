@@ -30,11 +30,13 @@ class LocationInfo {
     this.coordinates,
     this.name,
     this.selected,
+      this.ID
   );
 
   Coordinates coordinates;
   String name;
   bool selected;
+  String ID;
 }
 
 List<Coordinates> debugCoords = [
@@ -229,7 +231,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
 
   List<LocationInfo> currentLocationInfos = [
-    LocationInfo(null, "Your location", true),
+    LocationInfo(null, "Your location", true, null),
     //LocationInfo(debugCoords[1], "Lviv", false),
     //LocationInfo(debugCoords[2], "Austin", false),
     //LocationInfo(debugCoords[3], "Springfield", false),
@@ -1220,9 +1222,9 @@ class _LocationDrawerState extends State<LocationDrawer> {
 
   void AddRandomLocationInfo() {
     List<LocationInfo> temp = [
-      LocationInfo(debugCoords[1], "Lviv", false),
-      LocationInfo(debugCoords[2], "Austin", false),
-      LocationInfo(debugCoords[3], "Springfield", false),
+      LocationInfo(debugCoords[1], "Lviv", false, null),
+      LocationInfo(debugCoords[2], "Austin", false, null),
+      LocationInfo(debugCoords[3], "Springfield", false, null),
     ];
 
     LocationInfo newLoc = temp[Random().nextInt(temp.length)];
@@ -1446,6 +1448,8 @@ class _LocationDrawerState extends State<LocationDrawer> {
                                   SelectLocation(searchResultLocationInfos[index]);
                                 },
                               trailingIcon: Icon(Icons.location_on, color: Colors.white,),
+                              itemID: searchResultLocationInfos[index].ID,
+                              homePageState: widget.homePageState,
                             );
                           }
                           else {
@@ -1454,7 +1458,15 @@ class _LocationDrawerState extends State<LocationDrawer> {
                                 name:  searchResultLocationInfos[index].name,
                                 OnTap:  () {
                                   SelectLocation(searchResultLocationInfos[index]);
-                                }
+                                },
+                              itemID: searchResultLocationInfos[index].ID,
+                              homePageState: widget.homePageState,
+                              dismissed: () {
+                                setState(() {
+                                  widget.homePageState.connector.RemoveUserPlace(searchResultLocationInfos[index].ID);
+                                });
+                                QuerySearch();
+                              },
                             );
                           }
                         },
@@ -1475,6 +1487,9 @@ class DrawerSelectableLocation extends StatefulWidget {
   final String name;
   final Function OnTap;
   final Icon trailingIcon;
+  final String itemID;
+  final _MyHomePageState homePageState;
+  final Function dismissed;
 
   DrawerSelectableLocation({
     Key key,
@@ -1482,6 +1497,9 @@ class DrawerSelectableLocation extends StatefulWidget {
     @required this.name,
     @required this.OnTap,
     this.trailingIcon,
+    this.itemID,
+    this.homePageState,
+    this.dismissed,
   }) : super(key: key);
 
   @override
@@ -1498,27 +1516,41 @@ class _DrawerSelectableLocationState extends State<DrawerSelectableLocation> {
             ? Color.fromARGB(85, 0, 0, 0)
             : Color.fromARGB(0, 0, 0, 0),
       ),
-      child: ListTile(
-        trailing: widget.trailingIcon,
-        title: Align(
-          alignment: Alignment.centerRight,
-          child: Text(
-            widget.name,
-            style: TextStyle(
-              color: widget.isSelected
-                  ? Colors.white
-                  : Colors.white.withOpacity(0.65),
-              fontFamily: 'HelveticaNeue',
-              fontSize: 18.0,
-              fontWeight: widget.isSelected
-                  ? FontWeight.w500
-                  : FontWeight.w300,
+      child: Dismissible(
+        key: Key(widget.itemID),
+        onDismissed: (direction) {
+          widget.dismissed();
+        },
+        confirmDismiss: (direction) async {
+          if (widget.dismissed == null) {
+            return false;
+          }
+          else {
+            return true;
+          }
+        },
+        child: ListTile(
+          trailing: widget.trailingIcon,
+          title: Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              widget.name,
+              style: TextStyle(
+                color: widget.isSelected
+                    ? Colors.white
+                    : Colors.white.withOpacity(0.65),
+                fontFamily: 'HelveticaNeue',
+                fontSize: 18.0,
+                fontWeight: widget.isSelected
+                    ? FontWeight.w500
+                    : FontWeight.w300,
+              ),
             ),
           ),
+          onTap: () {
+            widget.OnTap();
+          },
         ),
-        onTap: () {
-          widget.OnTap();
-        },
       ),
     );
   }

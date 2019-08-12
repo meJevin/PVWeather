@@ -36,7 +36,8 @@ class FirebaseConnector  {
                     value.documents[i]['lon']
                 ),
                 value.documents[i]['name'],
-                false
+                false,
+              value.documents[i].documentID
             )
         );
       }
@@ -44,7 +45,6 @@ class FirebaseConnector  {
   }
 
   Future<Null> AddUserPlace(LocationInfo newInfo) async {
-    currentLocationInfos.add(newInfo);
     userPlacesRef.add(
       {
         'lon': newInfo.coordinates.longitude,
@@ -52,7 +52,17 @@ class FirebaseConnector  {
         'name': newInfo.name,
       }
     ).then((val){
-      return;
+      newInfo.ID = val.documentID;
+    });
+
+    currentLocationInfos.add(newInfo);
+  }
+
+  Future<Null> RemoveUserPlace(String infoIDToDelete) async {
+    userPlacesRef.document(infoIDToDelete).delete();
+
+    currentLocationInfos.removeWhere((info) {
+      return info.ID == infoIDToDelete;
     });
   }
 
