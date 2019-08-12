@@ -202,7 +202,7 @@ class MyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: new ThemeData(
         dividerColor: Colors.transparent,
-        canvasColor: Color.fromARGB(180, 85, 85, 85),
+        canvasColor: Color.fromARGB(55, 0, 0, 0),
       ),
       home: MyHomePage(),
       localizationsDelegates: [
@@ -237,7 +237,6 @@ class _MyHomePageState extends State<MyHomePage> {
 
   String todayString;
   String weekString;
-  String placesString;
   String currentPlaceString;
 
   List<String> mainUnexpectedMessages = List<String>();
@@ -558,16 +557,16 @@ class _MyHomePageState extends State<MyHomePage> {
     if (currentLocale.toString().contains("ru")) {
       todayString = "Сегодня";
       weekString = "Неделя";
-      placesString = "Места";
       currentPlaceString = "Моя позиция";
     } else {
       todayString = "Today";
       weekString = "Week";
-      placesString = "Places";
       currentPlaceString = "Current position";
     }
 
     return Scaffold(
+      resizeToAvoidBottomInset: false,
+      resizeToAvoidBottomPadding: false,
       body: Stack(fit: StackFit.expand, children: [
         FCMMessageHandler(
           currentLocationInfos: currentLocationInfos,
@@ -989,7 +988,6 @@ class _MyHomePageState extends State<MyHomePage> {
         locationInfos: currentLocationInfos,
         updateLocationFunction: UpdateLocation,
         homePageState: this,
-        placesString: placesString,
       ),
     );
   }
@@ -1150,14 +1148,11 @@ class LocationDrawer extends StatefulWidget {
 
   final _MyHomePageState homePageState;
 
-  String placesString;
-
   LocationDrawer({
     Key key,
     @required this.locationInfos,
     @required this.updateLocationFunction,
     @required this.homePageState,
-    @required this.placesString,
   }) : super(key: key);
 
   @override
@@ -1165,12 +1160,38 @@ class LocationDrawer extends StatefulWidget {
 }
 
 class _LocationDrawerState extends State<LocationDrawer> {
+
+  TextEditingController countrySearchTextEditingController = TextEditingController();
+
+  String countrySearchString = "";
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    countrySearchTextEditingController.dispose();
+    super.dispose();
+  }
+
   void LoadLocationInfo(LocationInfo info) {
     setState(() {
       widget.homePageState.customCoords = info.coordinates;
       widget.updateLocationFunction();
       widget.homePageState.currentInfo = WeatherInfo.Today;
     });
+  }
+
+  void ClearCurrentUserPlaces() {
+
+  }
+
+  void PerformCountryAPIRequest() {
+
   }
 
   @override
@@ -1181,25 +1202,88 @@ class _LocationDrawerState extends State<LocationDrawer> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.stretch,
             children: <Widget>[
+              // Upper search bar
               Container(
-                child: Padding(
-                  padding: const EdgeInsets.only(
-                    top: 15,
-                    bottom: 15,
-                    right: 15,
-                  ),
-                  child: Text(
-                    widget.placesString,
-                    textAlign: TextAlign.right,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontFamily: 'HelveticaNeue',
-                      fontSize: 35.0,
-                      fontWeight: FontWeight.w300,
+
+                child: Row(
+                  children: <Widget>[
+                    // Search icon
+                    IconButton(
+                      icon: Icon(Icons.search, color: Colors.white.withOpacity(0.85)),
+                      iconSize: 20,
+                      splashColor: Colors.transparent,
                     ),
-                  ),
-                ),
+
+                    // Country input field
+                    Expanded(
+                      child: TextField(
+
+                        controller: countrySearchTextEditingController,
+
+                        onSubmitted: (String text) {
+                          print(text);
+                        },
+
+                        onChanged: (String text) {
+                          setState(() {
+
+                          });
+                          print(text);
+                        },
+
+                        onTap: () {
+                          // Remove bottom update infos and clear up space for searhc results from API
+                          ClearCurrentUserPlaces();
+                        },
+
+                        keyboardAppearance: Brightness.dark,
+
+                        textCapitalization: TextCapitalization.words,
+                        decoration: InputDecoration(
+                          border: InputBorder.none,
+                          hintText: 'Search...',
+                          hintStyle: TextStyle(
+                            color: Colors.white.withOpacity(0.45),
+                            fontFamily: 'HelveticaNeue',
+                            fontSize: 16.0,
+                            fontWeight: FontWeight.w300,
+                          ),
+                        ),
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.85),
+                          fontFamily: 'HelveticaNeue',
+                          fontSize: 16.0,
+                          fontWeight: FontWeight.w300,
+                        ),
+                        cursorColor: Colors.white,
+                      ),
+                    ),
+
+                    // Clear icon builder
+                    Builder(
+                      builder: (BuildContext context) {
+                        if (countrySearchTextEditingController.text.length > 0) {
+                          return IconButton(
+                            icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.85)),
+                            iconSize: 20,
+                            onPressed: () {
+                              countrySearchTextEditingController.clear();
+                              setState(() {
+
+                              });
+                            },
+                            splashColor: Colors.transparent,
+                          );
+                        } else {
+                          return Container();
+                        }
+                      },
+                    )
+                  ],
+                )
               ),
+
+              // Bottom list view with user places from firebase
               Expanded(
                 flex: 4,
                 child: ListView.builder(
@@ -1211,8 +1295,8 @@ class _LocationDrawerState extends State<LocationDrawer> {
                     return Container(
                       decoration: BoxDecoration(
                         color: widget.locationInfos[index].selected
-                            ? Color.fromARGB(185, 165, 165, 165)
-                            : Color.fromARGB(185, 45, 45, 45),
+                            ? Color.fromARGB(85, 0, 0, 0)
+                            : Color.fromARGB(0, 45, 45, 45),
                       ),
                       child: ListTile(
                         title: Align(
@@ -1226,7 +1310,7 @@ class _LocationDrawerState extends State<LocationDrawer> {
                               fontFamily: 'HelveticaNeue',
                               fontSize: 18.0,
                               fontWeight: widget.locationInfos[index].selected
-                                  ? FontWeight.w400
+                                  ? FontWeight.w500
                                   : FontWeight.w300,
                             ),
                           ),
