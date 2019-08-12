@@ -1227,14 +1227,23 @@ class _LocationDrawerState extends State<LocationDrawer> {
       LocationInfo(debugCoords[3], "Springfield", false, null),
     ];
 
-    LocationInfo newLoc = temp[Random().nextInt(temp.length)];
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => LocationAdditionDialog(
+      ),
+    ).then((value) {
+      return;
+      LocationInfo newLoc = temp[Random().nextInt(temp.length)];
 
-    widget.homePageState.connector.AddUserPlace(newLoc);
+      widget.homePageState.connector.AddUserPlace(newLoc);
 
-    setState(() {
-      searchResultLocationInfos.clear();
-      searchResultLocationInfos.addAll(widget.homePageState.currentLocationInfos);
+      setState(() {
+        searchResultLocationInfos.clear();
+        searchResultLocationInfos.addAll(widget.homePageState.currentLocationInfos);
+      });
     });
+
+    return;
   }
 
   void SelectLocation(LocationInfo location) {
@@ -1555,3 +1564,219 @@ class _DrawerSelectableLocationState extends State<DrawerSelectableLocation> {
     );
   }
 }
+
+class LocationAdditionDialog extends StatefulWidget {
+  @override
+  _LocationAdditionDialogState createState() => _LocationAdditionDialogState();
+}
+
+class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
+
+  String APIKeyBattuta = "be0ce618a8c0f7e85070fd21aa317528";
+
+  bool isLoading = false;
+
+  Map<String, String> countryCodes = Map<String, String>();
+
+  List<String> countries = List<String>();
+  List<String> regions = List<String>();
+  List<String> city = List<String>();
+
+  String currentCountry = null;
+  String currentCountryCode = null;
+
+  TextEditingController countryTextController = new TextEditingController();
+  FocusNode countryFocusNode = new FocusNode();
+  String countryFilter;
+
+  dialogContent(BuildContext context) {
+    return Container(
+      decoration: new BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.rectangle,
+        borderRadius: BorderRadius.circular(15),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black26,
+            blurRadius: 5.0,
+            offset: const Offset(0.0, 10.0),
+          ),
+        ],
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Padding(
+            padding: const EdgeInsets.symmetric(vertical: 10.0),
+            child: Container(
+              height: 175,
+              child: new Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: <Widget>[
+                  new Padding(
+                      padding: new EdgeInsets.only(top: 8.0, left: 16.0, right: 16.0),
+                      child: new TextField(
+                        focusNode: countryFocusNode,
+                        onTap: () {
+                          FocusScope.of(context).requestFocus(countryFocusNode);
+                        },
+                        style: new TextStyle(fontSize: 18.0, color: Colors.black),
+                        decoration: InputDecoration(
+                          prefixIcon: new Icon(Icons.search),
+                          suffixIcon: new IconButton(
+                            icon: new Icon(Icons.close),
+                            onPressed: () {
+                              countryTextController.clear();
+                              FocusScope.of(context).requestFocus(new FocusNode());
+                            },
+                          ),
+                          hintText: "Search...",
+                        ),
+                        controller: countryTextController,
+                      )),
+                  new Expanded(
+                    child: new Padding(
+                        padding: new EdgeInsets.only(top: 8.0),
+                        child: countryFocusNode.hasFocus ? _buildListView() : Container()),
+                  )
+                ],
+              ),
+            ),
+          ),
+
+          // Space in-between
+          Expanded(
+            child: Container(),
+          ),
+
+          // Add button
+          FlatButton(
+            color: Colors.black.withOpacity(0.65),
+            child: Text(
+              'Add',
+              style: TextStyle(
+                color: Colors.white.withOpacity(0.85),
+                fontFamily: 'HelveticaNeue',
+                fontSize: 15.0,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+            onPressed: () {
+              Navigator.pop(context);
+            },
+          )
+        ],
+      ),
+    );
+  }
+
+  Widget _buildListView() {
+    return ListView.builder(
+        itemCount: countries.length,
+        itemBuilder: (BuildContext context, int index) {
+          if (countryFilter == null || countryFilter == "") {
+            return _buildRow(countries[index]);
+          } else {
+            if (countries[index]
+                .toLowerCase()
+                .contains(countryFilter.toLowerCase())) {
+              return _buildRow(countries[index]);
+            } else {
+              return new Container();
+            }
+          }
+        });
+  }
+
+  Widget _buildRow(String c) {
+    return new ListTile(
+        onTap: () {
+          setState(() {
+            countryTextController.text = c;
+            currentCountry = c;
+            currentCountryCode = countryCodes[currentCountry];
+
+            print("Current country code: " + currentCountryCode);
+            FocusScope.of(context).requestFocus(new FocusNode());
+
+            setState(() {
+
+            });
+          });
+        },
+        title: new Text(
+          c,
+        ));
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      child: dialogContent(context),
+    );
+  }
+
+  Future<http.Response> GetCountries(http.Client client) async {
+    return client.get('http://battuta.medunes.net/api/country/all/?key=be0ce618a8c0f7e85070fd21aa317528');
+  }
+
+  Future<http.Response> GetRegions(http.Client client, String countryCode) async {
+    return client.get('http://battuta.medunes.net/api/region/' + countryCode + '/all/?key=be0ce618a8c0f7e85070fd21aa317528');
+  }
+
+  Future<http.Response> GetCity(http.Client client, String region) async {
+    return client.get('http://battuta.medunes.net/api/city/search/?region=' + region + '&key=be0ce618a8c0f7e85070fd21aa317528');
+  }
+
+  void UpdateCountries() {
+    setState(() {
+      isLoading = true;
+    });
+
+    GetCountries(http.Client()).then((value) {
+      List<dynamic> countriesJSON = json.decode(value.body);
+
+      countries.clear();
+      countryCodes.clear();
+
+      setState(() {
+      });
+
+      for (int i = 0; i < countriesJSON.length; ++i) {
+        countries.add(countriesJSON[i]['name'].toString());
+        countryCodes[countriesJSON[i]['name'].toString()] = countriesJSON[i]['code'].toString();
+      }
+
+      setState(() {
+        isLoading = false;
+      });
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+    countryTextController.addListener(() {
+      setState(() {
+        countryFilter = countryTextController.text;
+      });
+    });
+    UpdateCountries();
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    countryTextController.dispose();
+  }
+}
+
