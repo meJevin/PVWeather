@@ -281,6 +281,8 @@ class _MyHomePageState extends State<MyHomePage> {
 
   String prevState = "";
 
+  FirebaseConnector connector;
+
   // For week
   List<WeekDayWeatherInfo> weekWeatherInfos = [];
 
@@ -547,7 +549,13 @@ class _MyHomePageState extends State<MyHomePage> {
     mainUnexpectedMessagesGeolocation.add("Can't find you!");
     mainUnexpectedMessagesGeolocation.add("Playing hide and seek?");
 
-    UpdateLocation();
+    connector = FirebaseConnector(currentLocationInfos: currentLocationInfos);
+
+    connector.Init().then((val) {
+      connector.GetUserPlaces();
+
+      UpdateLocation();
+    });
   }
 
   @override
@@ -568,10 +576,6 @@ class _MyHomePageState extends State<MyHomePage> {
       resizeToAvoidBottomInset: false,
       resizeToAvoidBottomPadding: false,
       body: Stack(fit: StackFit.expand, children: [
-        FCMMessageHandler(
-          currentLocationInfos: currentLocationInfos,
-        ),
-
         // BG
         Stack(
           fit: StackFit.expand,
@@ -985,7 +989,6 @@ class _MyHomePageState extends State<MyHomePage> {
         )
       ]),
       endDrawer: LocationDrawer(
-        locationInfos: currentLocationInfos,
         updateLocationFunction: UpdateLocation,
         homePageState: this,
       ),
@@ -1142,15 +1145,12 @@ class CurrentDayShortInfo extends StatelessWidget {
 }
 
 class LocationDrawer extends StatefulWidget {
-  final List<LocationInfo> locationInfos;
-
   final Function updateLocationFunction;
 
   final _MyHomePageState homePageState;
 
   LocationDrawer({
     Key key,
-    @required this.locationInfos,
     @required this.updateLocationFunction,
     @required this.homePageState,
   }) : super(key: key);
@@ -1166,13 +1166,20 @@ class _LocationDrawerState extends State<LocationDrawer> {
   String countrySearchString = "";
   List<LocationInfo> searchResultLocationInfos = List<LocationInfo>();
 
+  ScrollController drawerListViewController;
+
   FocusNode myFocusNode;
 
   @override
   void initState() {
     // TODO: implement initState
-    searchResultLocationInfos.addAll(widget.locationInfos);
+    searchResultLocationInfos.addAll(widget.homePageState.currentLocationInfos);
     myFocusNode = FocusNode();
+
+    drawerListViewController = ScrollController();
+    drawerListViewController.addListener((){
+      FocusScope.of(context).requestFocus(new FocusNode());
+    });
     super.initState();
   }
 
@@ -1196,24 +1203,33 @@ class _LocationDrawerState extends State<LocationDrawer> {
     searchResultLocationInfos.clear();
 
     if (countrySearchString == "") {
-      searchResultLocationInfos.addAll(widget.locationInfos);
+      searchResultLocationInfos.addAll(widget.homePageState.currentLocationInfos);
       return;
     }
 
-    for (int i = 1; i < widget.locationInfos.length; ++i) {
+    for (int i = 1; i < widget.homePageState.currentLocationInfos.length; ++i) {
       // Check if current location info has something suitable
-      if (widget.locationInfos[i].name.toLowerCase().contains(countrySearchString.toLowerCase())) {
-        searchResultLocationInfos.add(widget.locationInfos[i]);
+      if (widget.homePageState.currentLocationInfos[i].name.toLowerCase().contains(countrySearchString.toLowerCase())) {
+        searchResultLocationInfos.add(widget.homePageState.currentLocationInfos[i]);
       }
     }
   }
 
-  void ClearCurrentUserPlaces() {
+  void AddRandomLocationInfo() {
+    List<LocationInfo> temp = [
+      LocationInfo(debugCoords[1], "Lviv", false),
+      LocationInfo(debugCoords[2], "Austin", false),
+      LocationInfo(debugCoords[3], "Springfield", false),
+    ];
 
-  }
+    LocationInfo newLoc = temp[Random().nextInt(temp.length)];
 
-  void PerformCountryAPIRequest() {
+    widget.homePageState.connector.AddUserPlace(newLoc);
 
+    setState(() {
+      searchResultLocationInfos.clear();
+      searchResultLocationInfos.addAll(widget.homePageState.currentLocationInfos);
+    });
   }
 
   void SelectLocation(LocationInfo location) {
@@ -1222,12 +1238,12 @@ class _LocationDrawerState extends State<LocationDrawer> {
     }
 
     setState(() {
-      for (int i = 0; i < widget.locationInfos.length; ++i) {
-        if (location.coordinates == widget.locationInfos[i].coordinates) {
-          widget.locationInfos[i].selected = true;
-          LoadLocationInfo(widget.locationInfos[i]);
+      for (int i = 0; i < widget.homePageState.currentLocationInfos.length; ++i) {
+        if (location == widget.homePageState.currentLocationInfos[i]) {
+          widget.homePageState.currentLocationInfos[i].selected = true;
+          LoadLocationInfo(widget.homePageState.currentLocationInfos[i]);
         } else {
-          widget.locationInfos[i].selected = false;
+          widget.homePageState.currentLocationInfos[i].selected = false;
         }
       }
     });
@@ -1366,7 +1382,7 @@ class _LocationDrawerState extends State<LocationDrawer> {
                             padding: const EdgeInsets.symmetric(horizontal: 15.0),
                             child: GestureDetector(
                               onTap: () {
-                                
+                                AddRandomLocationInfo();
                               },
                               child: Icon(Icons.add, color: Colors.white)
                             ),
@@ -1407,6 +1423,8 @@ class _LocationDrawerState extends State<LocationDrawer> {
                     else {
                       // Search results from current location infos
                       return ListView.builder(
+
+                        controller: drawerListViewController,
 
                         physics: AlwaysScrollableScrollPhysics(
                             parent: BouncingScrollPhysics()),
