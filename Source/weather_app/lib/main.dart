@@ -1179,6 +1179,9 @@ class _LocationDrawerState extends State<LocationDrawer> {
     drawerListViewController = ScrollController();
     drawerListViewController.addListener((){
       FocusScope.of(context).requestFocus(new FocusNode());
+      setState(() {
+
+      });
     });
     super.initState();
   }
