@@ -1164,10 +1164,12 @@ class _LocationDrawerState extends State<LocationDrawer> {
   TextEditingController countrySearchTextEditingController = TextEditingController();
 
   String countrySearchString = "";
+  List<LocationInfo> searchResultLocationInfos = List<LocationInfo>();
 
   @override
   void initState() {
     // TODO: implement initState
+    searchResultLocationInfos.addAll(widget.locationInfos);
     super.initState();
   }
 
@@ -1184,6 +1186,22 @@ class _LocationDrawerState extends State<LocationDrawer> {
       widget.updateLocationFunction();
       widget.homePageState.currentInfo = WeatherInfo.Today;
     });
+  }
+
+  void QuerySreach() {
+    searchResultLocationInfos.clear();
+
+    if (countrySearchString == "") {
+      searchResultLocationInfos.addAll(widget.locationInfos);
+      return;
+    }
+
+    for (int i = 0; i < widget.locationInfos.length; ++i) {
+      // Check if current location info has something suitable
+      if (i == 0 || widget.locationInfos[i].name.toLowerCase().contains(countrySearchString.toLowerCase())) {
+        searchResultLocationInfos.add(widget.locationInfos[i]);
+      }
+    }
   }
 
   void ClearCurrentUserPlaces() {
@@ -1221,19 +1239,18 @@ class _LocationDrawerState extends State<LocationDrawer> {
                         controller: countrySearchTextEditingController,
 
                         onSubmitted: (String text) {
-                          print(text);
+                          setState(() {
+                            countrySearchString = text;
+                            QuerySreach();
+                          });
                         },
 
                         onChanged: (String text) {
                           setState(() {
-
+                            countrySearchString = text;
+                            QuerySreach();
                           });
                           print(text);
-                        },
-
-                        onTap: () {
-                          // Remove bottom update infos and clear up space for searhc results from API
-                          ClearCurrentUserPlaces();
                         },
 
                         keyboardAppearance: Brightness.dark,
@@ -1267,9 +1284,10 @@ class _LocationDrawerState extends State<LocationDrawer> {
                             icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.85)),
                             iconSize: 20,
                             onPressed: () {
-                              countrySearchTextEditingController.clear();
                               setState(() {
-
+                                countrySearchTextEditingController.clear();
+                                countrySearchString = "";
+                                QuerySreach();
                               });
                             },
                             splashColor: Colors.transparent,
@@ -1286,54 +1304,62 @@ class _LocationDrawerState extends State<LocationDrawer> {
               // Bottom list view with user places from firebase
               Expanded(
                 flex: 4,
-                child: ListView.builder(
-                  physics: AlwaysScrollableScrollPhysics(
-                      parent: BouncingScrollPhysics()),
-                  padding: EdgeInsets.zero,
-                  itemCount: widget.locationInfos.length,
-                  itemBuilder: (BuildContext contextB, int index) {
-                    return Container(
-                      decoration: BoxDecoration(
-                        color: widget.locationInfos[index].selected
-                            ? Color.fromARGB(85, 0, 0, 0)
-                            : Color.fromARGB(0, 45, 45, 45),
-                      ),
-                      child: ListTile(
-                        title: Align(
-                          alignment: Alignment.centerRight,
-                          child: Text(
-                            widget.locationInfos[index].name,
-                            style: TextStyle(
-                              color: widget.locationInfos[index].selected
-                                  ? Colors.white
-                                  : Colors.white.withOpacity(0.65),
-                              fontFamily: 'HelveticaNeue',
-                              fontSize: 18.0,
-                              fontWeight: widget.locationInfos[index].selected
-                                  ? FontWeight.w500
-                                  : FontWeight.w300,
+                child: Builder(
+                  builder: (BuildContext context){
+                    if (countrySearchString != "" && searchResultLocationInfos.length == 1) {
+                      return Text("Nigga");
+                    }
+                    else {
+                      // Search results from current location infos
+                      return ListView.builder(
+                        physics: AlwaysScrollableScrollPhysics(
+                            parent: BouncingScrollPhysics()),
+                        padding: EdgeInsets.zero,
+                        itemCount: searchResultLocationInfos.length,
+                        itemBuilder: (BuildContext contextB, int index) {
+                          return Container(
+                            decoration: BoxDecoration(
+                              color: searchResultLocationInfos[index].selected
+                                  ? Color.fromARGB(85, 0, 0, 0)
+                                  : Color.fromARGB(0, 0, 0, 0),
                             ),
-                          ),
-                        ),
-                        onTap: () {
-                          setState(() {
-                            for (int i = 0;
-                                i < widget.locationInfos.length;
-                                ++i) {
-                              if (i == index) {
-                                widget.locationInfos[i].selected = true;
-                                LoadLocationInfo(widget.locationInfos[i]);
-                              } else {
-                                widget.locationInfos[i].selected = false;
-                              }
-                            }
-                          });
-                          Navigator.pop(context);
+                            child: ListTile(
+                              title: Align(
+                                alignment: Alignment.centerRight,
+                                child: Text(
+                                  searchResultLocationInfos[index].name,
+                                  style: TextStyle(
+                                    color: searchResultLocationInfos[index].selected
+                                        ? Colors.white
+                                        : Colors.white.withOpacity(0.65),
+                                    fontFamily: 'HelveticaNeue',
+                                    fontSize: 18.0,
+                                    fontWeight: searchResultLocationInfos[index].selected
+                                        ? FontWeight.w500
+                                        : FontWeight.w300,
+                                  ),
+                                ),
+                              ),
+                              onTap: () {
+                                setState(() {
+                                  for (int i = 0; i < searchResultLocationInfos.length; ++i) {
+                                    if (i == index) {
+                                      searchResultLocationInfos[i].selected = true;
+                                      LoadLocationInfo(searchResultLocationInfos[i]);
+                                    } else {
+                                      searchResultLocationInfos[i].selected = false;
+                                    }
+                                  }
+                                });
+                                Navigator.pop(context);
+                              },
+                            ),
+                          );
                         },
-                      ),
-                    );
+                      );
+                    }
                   },
-                ),
+                )
               ),
             ],
           ),
