@@ -229,7 +229,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
 
   List<LocationInfo> currentLocationInfos = [
-    LocationInfo(null, "Current", true),
+    LocationInfo(null, "Your location", true),
     //LocationInfo(debugCoords[1], "Lviv", false),
     //LocationInfo(debugCoords[2], "Austin", false),
     //LocationInfo(debugCoords[3], "Springfield", false),
@@ -1166,10 +1166,13 @@ class _LocationDrawerState extends State<LocationDrawer> {
   String countrySearchString = "";
   List<LocationInfo> searchResultLocationInfos = List<LocationInfo>();
 
+  FocusNode myFocusNode;
+
   @override
   void initState() {
     // TODO: implement initState
     searchResultLocationInfos.addAll(widget.locationInfos);
+    myFocusNode = FocusNode();
     super.initState();
   }
 
@@ -1177,6 +1180,7 @@ class _LocationDrawerState extends State<LocationDrawer> {
   void dispose() {
     // TODO: implement dispose
     countrySearchTextEditingController.dispose();
+    myFocusNode.dispose();
     super.dispose();
   }
 
@@ -1188,7 +1192,7 @@ class _LocationDrawerState extends State<LocationDrawer> {
     });
   }
 
-  void QuerySreach() {
+  void QuerySearch() {
     searchResultLocationInfos.clear();
 
     if (countrySearchString == "") {
@@ -1196,9 +1200,9 @@ class _LocationDrawerState extends State<LocationDrawer> {
       return;
     }
 
-    for (int i = 0; i < widget.locationInfos.length; ++i) {
+    for (int i = 1; i < widget.locationInfos.length; ++i) {
       // Check if current location info has something suitable
-      if (i == 0 || widget.locationInfos[i].name.toLowerCase().contains(countrySearchString.toLowerCase())) {
+      if (widget.locationInfos[i].name.toLowerCase().contains(countrySearchString.toLowerCase())) {
         searchResultLocationInfos.add(widget.locationInfos[i]);
       }
     }
@@ -1210,6 +1214,33 @@ class _LocationDrawerState extends State<LocationDrawer> {
 
   void PerformCountryAPIRequest() {
 
+  }
+
+  void SelectLocation(LocationInfo location) {
+    if (location.selected) {
+      return;
+    }
+
+    setState(() {
+      for (int i = 0; i < widget.locationInfos.length; ++i) {
+        if (location.coordinates == widget.locationInfos[i].coordinates) {
+          widget.locationInfos[i].selected = true;
+          LoadLocationInfo(widget.locationInfos[i]);
+        } else {
+          widget.locationInfos[i].selected = false;
+        }
+      }
+    });
+
+    //Navigator.pop(context);
+  }
+
+  void ClearSearch() {
+    setState(() {
+      countrySearchTextEditingController.clear();
+      countrySearchString = "";
+      QuerySearch();
+    });
   }
 
   @override
@@ -1238,17 +1269,25 @@ class _LocationDrawerState extends State<LocationDrawer> {
 
                         controller: countrySearchTextEditingController,
 
+                        focusNode: myFocusNode,
+                        onTap: () {
+                          FocusScope.of(context).requestFocus(myFocusNode);
+                          setState(() {
+
+                          });
+                        },
+
                         onSubmitted: (String text) {
                           setState(() {
                             countrySearchString = text;
-                            QuerySreach();
+                            QuerySearch();
                           });
                         },
 
                         onChanged: (String text) {
                           setState(() {
                             countrySearchString = text;
-                            QuerySreach();
+                            QuerySearch();
                           });
                           print(text);
                         },
@@ -1277,6 +1316,7 @@ class _LocationDrawerState extends State<LocationDrawer> {
                     ),
 
                     // Clear icon builder
+
                     Builder(
                       builder: (BuildContext context) {
                         if (countrySearchTextEditingController.text.length > 0) {
@@ -1284,11 +1324,7 @@ class _LocationDrawerState extends State<LocationDrawer> {
                             icon: Icon(Icons.clear, color: Colors.white.withOpacity(0.85)),
                             iconSize: 20,
                             onPressed: () {
-                              setState(() {
-                                countrySearchTextEditingController.clear();
-                                countrySearchString = "";
-                                QuerySreach();
-                              });
+                              ClearSearch();
                             },
                             splashColor: Colors.transparent,
                           );
@@ -1296,7 +1332,39 @@ class _LocationDrawerState extends State<LocationDrawer> {
                           return Container();
                         }
                       },
-                    )
+                    ),
+
+                    // Cancel button
+                    Builder(
+                      builder: (BuildContext context) {
+                        if (myFocusNode.hasFocus) {
+                          return Padding(
+                            padding: const EdgeInsets.only(right: 5.0, left: 5.0),
+                            child: GestureDetector(
+                              onTap: () {
+                                FocusScope.of(context).requestFocus(new FocusNode());
+                                ClearSearch();
+                              },
+                              child: Container(
+                                color: Colors.black.withOpacity(0.35),
+                                padding: EdgeInsets.symmetric(horizontal: 14, vertical: 7),
+                                child: Text(
+                                  "Cancel",
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.85),
+                                    fontFamily: 'HelveticaNeue',
+                                    fontSize: 13.0,
+                                    fontWeight: FontWeight.w600,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          );
+                        } else {
+                          return Container();
+                        }
+                      },
+                    ),
                   ],
                 )
               ),
@@ -1306,55 +1374,43 @@ class _LocationDrawerState extends State<LocationDrawer> {
                 flex: 4,
                 child: Builder(
                   builder: (BuildContext context){
-                    if (countrySearchString != "" && searchResultLocationInfos.length == 1) {
-                      return Text("Nigga");
+                    if (countrySearchString != "" && searchResultLocationInfos.length == 0) {
+
+                      return Container();
+
                     }
                     else {
                       // Search results from current location infos
                       return ListView.builder(
+
                         physics: AlwaysScrollableScrollPhysics(
                             parent: BouncingScrollPhysics()),
+
                         padding: EdgeInsets.zero,
+
                         itemCount: searchResultLocationInfos.length,
                         itemBuilder: (BuildContext contextB, int index) {
-                          return Container(
-                            decoration: BoxDecoration(
-                              color: searchResultLocationInfos[index].selected
-                                  ? Color.fromARGB(85, 0, 0, 0)
-                                  : Color.fromARGB(0, 0, 0, 0),
-                            ),
-                            child: ListTile(
-                              title: Align(
-                                alignment: Alignment.centerRight,
-                                child: Text(
-                                  searchResultLocationInfos[index].name,
-                                  style: TextStyle(
-                                    color: searchResultLocationInfos[index].selected
-                                        ? Colors.white
-                                        : Colors.white.withOpacity(0.65),
-                                    fontFamily: 'HelveticaNeue',
-                                    fontSize: 18.0,
-                                    fontWeight: searchResultLocationInfos[index].selected
-                                        ? FontWeight.w500
-                                        : FontWeight.w300,
-                                  ),
-                                ),
-                              ),
-                              onTap: () {
-                                setState(() {
-                                  for (int i = 0; i < searchResultLocationInfos.length; ++i) {
-                                    if (i == index) {
-                                      searchResultLocationInfos[i].selected = true;
-                                      LoadLocationInfo(searchResultLocationInfos[i]);
-                                    } else {
-                                      searchResultLocationInfos[i].selected = false;
-                                    }
-                                  }
-                                });
-                                Navigator.pop(context);
-                              },
-                            ),
-                          );
+
+                          if (searchResultLocationInfos[index].coordinates == null) {
+                            // Current location
+                            return DrawerSelectableLocation(
+                                isSelected: searchResultLocationInfos[index].selected,
+                                name:  searchResultLocationInfos[index].name,
+                                OnTap:  () {
+                                  SelectLocation(searchResultLocationInfos[index]);
+                                },
+                              trailingIcon: Icon(Icons.location_on, color: Colors.white,),
+                            );
+                          }
+                          else {
+                            return DrawerSelectableLocation(
+                                isSelected: searchResultLocationInfos[index].selected,
+                                name:  searchResultLocationInfos[index].name,
+                                OnTap:  () {
+                                  SelectLocation(searchResultLocationInfos[index]);
+                                }
+                            );
+                          }
                         },
                       );
                     }
@@ -1364,5 +1420,60 @@ class _LocationDrawerState extends State<LocationDrawer> {
             ],
           ),
         ));
+  }
+}
+
+class DrawerSelectableLocation extends StatefulWidget {
+
+  final bool isSelected;
+  final String name;
+  final Function OnTap;
+  final Icon trailingIcon;
+
+  DrawerSelectableLocation({
+    Key key,
+    @required this.isSelected,
+    @required this.name,
+    @required this.OnTap,
+    this.trailingIcon,
+  }) : super(key: key);
+
+  @override
+  _DrawerSelectableLocationState createState() => _DrawerSelectableLocationState();
+}
+
+class _DrawerSelectableLocationState extends State<DrawerSelectableLocation> {
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        color: widget.isSelected
+            ? Color.fromARGB(85, 0, 0, 0)
+            : Color.fromARGB(0, 0, 0, 0),
+      ),
+      child: ListTile(
+        trailing: widget.trailingIcon,
+        title: Align(
+          alignment: Alignment.centerRight,
+          child: Text(
+            widget.name,
+            style: TextStyle(
+              color: widget.isSelected
+                  ? Colors.white
+                  : Colors.white.withOpacity(0.65),
+              fontFamily: 'HelveticaNeue',
+              fontSize: 18.0,
+              fontWeight: widget.isSelected
+                  ? FontWeight.w500
+                  : FontWeight.w300,
+            ),
+          ),
+        ),
+        onTap: () {
+          widget.OnTap();
+        },
+      ),
+    );
   }
 }
