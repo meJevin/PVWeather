@@ -1595,77 +1595,71 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
         color: Colors.white,
         shape: BoxShape.rectangle,
         borderRadius: BorderRadius.circular(15),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black26,
-            blurRadius: 5.0,
-            offset: const Offset(0.0, 10.0),
-          ),
-        ],
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
         mainAxisSize: MainAxisSize.max,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: <Widget>[
-          Padding(
-            padding: const EdgeInsets.symmetric(vertical: 10.0),
-            child: Container(
-              height: 175,
-              child: new Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: <Widget>[
-                  new Padding(
-                      padding: new EdgeInsets.only(top: 8.0, left: 16.0, right: 16.0),
-                      child: new TextField(
-                        focusNode: countryFocusNode,
-                        onTap: () {
-                          FocusScope.of(context).requestFocus(countryFocusNode);
-                        },
-                        style: new TextStyle(fontSize: 18.0, color: Colors.black),
-                        decoration: InputDecoration(
-                          prefixIcon: new Icon(Icons.search),
-                          suffixIcon: new IconButton(
-                            icon: new Icon(Icons.close),
-                            onPressed: () {
-                              countryTextController.clear();
-                              FocusScope.of(context).requestFocus(new FocusNode());
-                            },
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10.0),
+              child: Container(
+                height: 175,
+                child: new Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    new Padding(
+                        padding: new EdgeInsets.only(top: 8.0, left: 16.0, right: 16.0),
+                        child: new TextField(
+                          focusNode: countryFocusNode,
+                          onTap: () {
+                            FocusScope.of(context).requestFocus(countryFocusNode);
+                          },
+                          style: new TextStyle(fontSize: 18.0, color: Colors.black),
+                          decoration: InputDecoration(
+                            prefixIcon: new Icon(Icons.search),
+                            suffixIcon: new IconButton(
+                              icon: new Icon(Icons.close),
+                              onPressed: () {
+                                countryTextController.clear();
+                                FocusScope.of(context).requestFocus(new FocusNode());
+                              },
+                            ),
+                            hintText: "Search...",
                           ),
-                          hintText: "Search...",
-                        ),
-                        controller: countryTextController,
-                      )),
-                  new Expanded(
-                    child: new Padding(
-                        padding: new EdgeInsets.only(top: 8.0),
-                        child: countryFocusNode.hasFocus ? _buildListView() : Container()),
-                  )
-                ],
+                          controller: countryTextController,
+                        )),
+                    new Expanded(
+                      child: new Padding(
+                          padding: new EdgeInsets.only(top: 8.0),
+                          child: countryFocusNode.hasFocus ? _buildListView() : Container()),
+                    )
+                  ],
+                ),
               ),
             ),
-          ),
-
-          // Space in-between
-          Expanded(
-            child: Container(),
           ),
 
           // Add button
-          FlatButton(
-            color: Colors.black.withOpacity(0.65),
-            child: Text(
-              'Add',
-              style: TextStyle(
-                color: Colors.white.withOpacity(0.85),
-                fontFamily: 'HelveticaNeue',
-                fontSize: 15.0,
-                fontWeight: FontWeight.w600,
+          Padding(
+            padding: const EdgeInsets.all(10.0),
+            child: FlatButton(
+              color: Colors.black.withOpacity(0.35),
+              splashColor: Colors.transparent,
+              child: Text(
+                'Done',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontFamily: 'HelveticaNeue',
+                  fontSize: 16.0,
+                  fontWeight: FontWeight.w900,
+                ),
               ),
+              onPressed: () {
+                Navigator.pop(context);
+              },
             ),
-            onPressed: () {
-              Navigator.pop(context);
-            },
           )
         ],
       ),
@@ -1675,6 +1669,7 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
   Widget _buildListView() {
     return ListView.builder(
         itemCount: countries.length,
+        physics: BouncingScrollPhysics(),
         itemBuilder: (BuildContext context, int index) {
           if (countryFilter == null || countryFilter == "") {
             return _buildRow(countries[index]);
@@ -1698,7 +1693,6 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
             currentCountry = c;
             currentCountryCode = countryCodes[currentCountry];
 
-            print("Current country code: " + currentCountryCode);
             FocusScope.of(context).requestFocus(new FocusNode());
 
             setState(() {
@@ -1743,10 +1737,9 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
     GetCountries(http.Client()).then((value) {
       List<dynamic> countriesJSON = json.decode(value.body);
 
-      countries.clear();
-      countryCodes.clear();
-
       setState(() {
+        countries.clear();
+        countryCodes.clear();
       });
 
       for (int i = 0; i < countriesJSON.length; ++i) {
