@@ -205,6 +205,11 @@ class MyApp extends StatelessWidget {
       theme: new ThemeData(
         dividerColor: Colors.transparent,
         canvasColor: Color.fromARGB(55, 0, 0, 0),
+
+        primaryColor: Colors.black,
+        accentColor: Colors.black,
+        hintColor: Colors.black,
+        splashColor: Colors.transparent
       ),
       home: MyHomePage(),
       localizationsDelegates: [
@@ -1150,6 +1155,7 @@ class LocationDrawer extends StatefulWidget {
   final Function updateLocationFunction;
 
   final _MyHomePageState homePageState;
+  _LocationAdditionDialogState locationAdditionDialogState;
 
   LocationDrawer({
     Key key,
@@ -1230,6 +1236,7 @@ class _LocationDrawerState extends State<LocationDrawer> {
     showDialog(
       context: context,
       builder: (BuildContext context) => LocationAdditionDialog(
+        drawerState: this,
       ),
     ).then((value) {
       return;
@@ -1565,29 +1572,39 @@ class _DrawerSelectableLocationState extends State<DrawerSelectableLocation> {
   }
 }
 
+class PlacesAPISearchItem {
+  Coordinates coords;
+  String title;
+  String categoryTitle;
+  String vicinity;
+}
+
 class LocationAdditionDialog extends StatefulWidget {
+
+  final _LocationDrawerState drawerState;
+
+  LocationAdditionDialog({
+    Key key,
+    @required this.drawerState,
+  }) : super(key: key);
+
   @override
   _LocationAdditionDialogState createState() => _LocationAdditionDialogState();
 }
 
 class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
 
-  String APIKeyBattuta = "be0ce618a8c0f7e85070fd21aa317528";
+  String PlacesAPIAppCode = "7ciDg_Pl1PV-Md4noTn17A";
+  String PlacesAPIAppID = "CFglxeF2oorKunPgo3IK";
 
   bool isLoading = false;
 
-  Map<String, String> countryCodes = Map<String, String>();
+  List<PlacesAPISearchItem> searchResults = List<PlacesAPISearchItem>();
 
-  List<String> countries = List<String>();
-  List<String> regions = List<String>();
-  List<String> city = List<String>();
-
-  String currentCountry = null;
-  String currentCountryCode = null;
+  PlacesAPISearchItem selectedItem = null;
 
   TextEditingController countryTextController = new TextEditingController();
   FocusNode countryFocusNode = new FocusNode();
-  String countryFilter;
 
   dialogContent(BuildContext context) {
     return Container(
@@ -1613,21 +1630,31 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
                         padding: new EdgeInsets.only(top: 8.0, left: 16.0, right: 16.0),
                         child: new TextField(
                           focusNode: countryFocusNode,
+
                           onTap: () {
                             FocusScope.of(context).requestFocus(countryFocusNode);
                           },
+
                           style: new TextStyle(fontSize: 18.0, color: Colors.black),
+
                           decoration: InputDecoration(
                             prefixIcon: new Icon(Icons.search),
                             suffixIcon: new IconButton(
                               icon: new Icon(Icons.close),
                               onPressed: () {
                                 countryTextController.clear();
+                                searchResults.clear();
+                                selectedItem = null;
                                 FocusScope.of(context).requestFocus(new FocusNode());
                               },
                             ),
                             hintText: "Search...",
+                            hintStyle: TextStyle(fontSize: 16.0, color: Colors.black.withOpacity(0.35)),
                           ),
+
+                          onChanged: (String text) {
+                            UpdateCountries();
+                          },
                           controller: countryTextController,
                         )),
                     new Expanded(
@@ -1667,31 +1694,34 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
   }
 
   Widget _buildListView() {
-    return ListView.builder(
-        itemCount: countries.length,
-        physics: BouncingScrollPhysics(),
-        itemBuilder: (BuildContext context, int index) {
-          if (countryFilter == null || countryFilter == "") {
-            return _buildRow(countries[index]);
-          } else {
-            if (countries[index]
-                .toLowerCase()
-                .contains(countryFilter.toLowerCase())) {
-              return _buildRow(countries[index]);
-            } else {
-              return new Container();
-            }
-          }
-        });
+    return Center(
+      child: Scrollbar(
+        child: !isLoading ? ListView.builder(
+            itemCount: searchResults.length,
+            physics: BouncingScrollPhysics(),
+            itemBuilder: (BuildContext context, int index) {
+              return _buildRow(searchResults[index], index);
+            })
+            :
+            Container(
+              width: 50,
+              height: 50,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor:
+                new AlwaysStoppedAnimation<Color>(Colors.black),
+              ),
+            ),
+      ),
+    );
   }
 
-  Widget _buildRow(String c) {
+  Widget _buildRow(PlacesAPISearchItem item, int index) {
     return new ListTile(
         onTap: () {
           setState(() {
-            countryTextController.text = c;
-            currentCountry = c;
-            currentCountryCode = countryCodes[currentCountry];
+            countryTextController.text = item.title;
+            selectedItem = searchResults[index];
 
             FocusScope.of(context).requestFocus(new FocusNode());
 
@@ -1701,8 +1731,10 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
           });
         },
         title: new Text(
-          c,
-        ));
+          item.title,
+        ),
+      subtitle: Text(item.vicinity),
+    );
   }
   
   @override
@@ -1717,16 +1749,24 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
     );
   }
 
-  Future<http.Response> GetCountries(http.Client client) async {
-    return client.get('http://battuta.medunes.net/api/country/all/?key=be0ce618a8c0f7e85070fd21aa317528');
+  String viableCategory = "city-town-village";
+  String ConstructAPICallURI(String search, Coordinates userCoords)
+  {
+    String APICallPlaceholder = "https://places.cit.api.here.com/places/v1/autosuggest?at={LAT},{LON}&q={SEARCH}&app_id={YOUR_APP_ID}&app_code={YOUR_APP_CODE}";
+
+    APICallPlaceholder = APICallPlaceholder.replaceAll("{LAT}", userCoords.latitude.toString());
+    APICallPlaceholder = APICallPlaceholder.replaceAll("{LON}", userCoords.longitude.toString());
+
+    APICallPlaceholder = APICallPlaceholder.replaceAll("{SEARCH}", search);
+
+    APICallPlaceholder = APICallPlaceholder.replaceAll("{YOUR_APP_ID}", PlacesAPIAppID);
+    APICallPlaceholder = APICallPlaceholder.replaceAll("{YOUR_APP_CODE}", PlacesAPIAppCode);
+
+    return APICallPlaceholder;
   }
 
-  Future<http.Response> GetRegions(http.Client client, String countryCode) async {
-    return client.get('http://battuta.medunes.net/api/region/' + countryCode + '/all/?key=be0ce618a8c0f7e85070fd21aa317528');
-  }
-
-  Future<http.Response> GetCity(http.Client client, String region) async {
-    return client.get('http://battuta.medunes.net/api/city/search/?region=' + region + '&key=be0ce618a8c0f7e85070fd21aa317528');
+  Future<http.Response> GetSearchResults(http.Client client, String search, Coordinates userCoords) async {
+    return client.get(ConstructAPICallURI(search, userCoords));
   }
 
   void UpdateCountries() {
@@ -1734,17 +1774,28 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
       isLoading = true;
     });
 
-    GetCountries(http.Client()).then((value) {
-      List<dynamic> countriesJSON = json.decode(value.body);
+    GetSearchResults(http.Client(),
+        countryTextController.text, widget.drawerState.widget.homePageState.userCoords).then((value) {
+      List<dynamic> countriesJSON = json.decode(value.body)["results"];
 
       setState(() {
-        countries.clear();
-        countryCodes.clear();
+        searchResults.clear();
       });
 
       for (int i = 0; i < countriesJSON.length; ++i) {
-        countries.add(countriesJSON[i]['name'].toString());
-        countryCodes[countriesJSON[i]['name'].toString()] = countriesJSON[i]['code'].toString();
+        String category = countriesJSON[i]['category'];
+
+        if (category != "administrative-region" && category != "city-town-village"){
+          continue;
+        }
+
+        PlacesAPISearchItem item = PlacesAPISearchItem();
+        item.title = countriesJSON[i]['title'];
+        item.categoryTitle = countriesJSON[i]['categoryTitle'];
+        item.vicinity = countriesJSON[i]['vicinity'].toString().replaceAll('<br/>', '\n');
+        item.coords = Coordinates(countriesJSON[i]['position'][0], countriesJSON[i]['position'][1]);
+
+        searchResults.add(item);
       }
 
       setState(() {
@@ -1757,12 +1808,10 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
   void initState() {
     // TODO: implement initState
     super.initState();
-    countryTextController.addListener(() {
-      setState(() {
-        countryFilter = countryTextController.text;
-      });
-    });
+
     UpdateCountries();
+
+    widget.drawerState.widget.locationAdditionDialogState = this;
   }
 
   @override
