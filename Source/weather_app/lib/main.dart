@@ -1178,6 +1178,8 @@ class _LocationDrawerState extends State<LocationDrawer> {
 
   FocusNode myFocusNode;
 
+  LocationInfo addedLocationInfo = null;
+
   @override
   void initState() {
     // TODO: implement initState
@@ -1226,27 +1228,24 @@ class _LocationDrawerState extends State<LocationDrawer> {
     }
   }
 
-  void AddRandomLocationInfo() {
-    List<LocationInfo> temp = [
-      LocationInfo(debugCoords[1], "Lviv", false, null),
-      LocationInfo(debugCoords[2], "Austin", false, null),
-      LocationInfo(debugCoords[3], "Springfield", false, null),
-    ];
-
+  void AddLocation() {
     showDialog(
       context: context,
       builder: (BuildContext context) => LocationAdditionDialog(
         drawerState: this,
       ),
     ).then((value) {
-      return;
-      LocationInfo newLoc = temp[Random().nextInt(temp.length)];
+      if (addedLocationInfo == null){
+        return;
+      }
 
-      widget.homePageState.connector.AddUserPlace(newLoc);
+      widget.homePageState.connector.AddUserPlace(addedLocationInfo).then((val) {
+        addedLocationInfo = null;
 
-      setState(() {
-        searchResultLocationInfos.clear();
-        searchResultLocationInfos.addAll(widget.homePageState.currentLocationInfos);
+        setState(() {
+          searchResultLocationInfos.clear();
+          searchResultLocationInfos.addAll(widget.homePageState.currentLocationInfos);
+        });
       });
     });
 
@@ -1403,7 +1402,7 @@ class _LocationDrawerState extends State<LocationDrawer> {
                             padding: const EdgeInsets.symmetric(horizontal: 15.0),
                             child: GestureDetector(
                               onTap: () {
-                                AddRandomLocationInfo();
+                                AddLocation();
                               },
                               child: Icon(Icons.add, color: Colors.white)
                             ),
@@ -1667,27 +1666,6 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
               ),
             ),
           ),
-
-          // Add button
-          Padding(
-            padding: const EdgeInsets.all(10.0),
-            child: FlatButton(
-              color: Colors.black.withOpacity(0.35),
-              splashColor: Colors.transparent,
-              child: Text(
-                'Done',
-                style: TextStyle(
-                  color: Colors.white,
-                  fontFamily: 'HelveticaNeue',
-                  fontSize: 16.0,
-                  fontWeight: FontWeight.w900,
-                ),
-              ),
-              onPressed: () {
-                Navigator.pop(context);
-              },
-            ),
-          )
         ],
       ),
     );
@@ -1725,8 +1703,12 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
 
             FocusScope.of(context).requestFocus(new FocusNode());
 
-            setState(() {
+            LocationInfo tileLocInfo = LocationInfo(searchResults[index].coords, searchResults[index].title, false, null);
 
+            widget.drawerState.addedLocationInfo = tileLocInfo;
+
+            setState(() {
+              Navigator.pop(context);
             });
           });
         },
