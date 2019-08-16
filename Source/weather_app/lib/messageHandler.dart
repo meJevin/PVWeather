@@ -11,50 +11,65 @@ import 'package:geocoder/geocoder.dart';
 
 import 'main.dart';
 
-class FCMMessageHandler extends StatefulWidget {
-  FCMMessageHandler({
-    Key key,
+class FirebaseConnector  {
+  FirebaseConnector({
     this.currentLocationInfos,
-  }) : super(key: key);
+  });
 
+  String fcmToken;
+
+  Firestore _db = Firestore.instance;
+  FirebaseMessaging _fcm = FirebaseMessaging();
 
   List<LocationInfo> currentLocationInfos;
 
-  @override
-  _FCMMessageHandlerState createState() => _FCMMessageHandlerState();
-}
+  DocumentReference userDocRef =  null;
+  CollectionReference userPlacesRef = null;
 
-class _FCMMessageHandlerState extends State<FCMMessageHandler> {
+  void GetUserPlaces() {
+    userPlacesRef.getDocuments().then((value) {
+      for (int i = 0; i < value.documents.length; ++i) {
+        currentLocationInfos.add(
+            LocationInfo(
+                Coordinates(
+                    value.documents[i]['lat'],
+                    value.documents[i]['lon']
+                ),
+                value.documents[i]['name'],
+                false,
+              value.documents[i].documentID
+            )
+        );
+      }
+    });
+  }
 
-  final Firestore _db = Firestore.instance;
-  final FirebaseMessaging _fcm = FirebaseMessaging();
+  Future<Null> AddUserPlace(LocationInfo newInfo) async {
+    userPlacesRef.add(
+      {
+        'lon': newInfo.coordinates.longitude,
+        'lat': newInfo.coordinates.latitude,
+        'name': newInfo.name,
+      }
+    ).then((val){
+      newInfo.ID = val.documentID;
+    });
 
-  @override
-  void initState() {
-    super.initState();
+    currentLocationInfos.add(newInfo);
+  }
 
-    //if (Platform.isIOS) {
-    //  _fcm.onIosSettingsRegistered.listen(
-    //        (data) { saveDeviceToken(); },
-    //  );
-//
-    //  _fcm.requestNotificationPermissions(
-    //      IosNotificationSettings()
-    //  );
-    //} else {
-    //  saveDeviceToken();
-    //}
+  Future<Null> RemoveUserPlace(String infoIDToDelete) async {
+    userPlacesRef.document(infoIDToDelete).delete();
 
-    saveDeviceToken();
+    currentLocationInfos.removeWhere((info) {
+      return info.ID == infoIDToDelete;
+    });
+  }
+
+  Future<Null> Init() async {
 
     _fcm.configure(
       onMessage: (Map<String, dynamic> message) async {
-        final snackBar = SnackBar(
-          content: Text(message['notification']['title']),
-          action: SnackBarAction(label: 'Go', onPressed: () => null),
-        );
-
-        Scaffold.of(context).showSnackBar(snackBar);
       },
 
       onLaunch: (Map<String, dynamic> message) async {
@@ -65,45 +80,33 @@ class _FCMMessageHandlerState extends State<FCMMessageHandler> {
 
       },
     );
-  }
 
-  saveDeviceToken() async {
-    //FirebaseUser user = await _auth.currentUser();
-
-    String fcmToken = await _fcm.getToken();
+    fcmToken = await _fcm.getToken();
 
     if (fcmToken != null) {
-      var tokenRef = _db
-          .collection('users')
-          .document(fcmToken)
-          .collection('places');
 
-      var placecFromDB = await _db.collection('users').document(fcmToken)
-          .collection('places').getDocuments()
-          .then((value) {
-        for (int i = 0; i < value.documents.length; ++i) {
-          widget.currentLocationInfos.add(
-              LocationInfo(
-                  Coordinates(
-                      value.documents[i]['lat'],
-                      value.documents[i]['lon']
-                  ),
-                  value.documents[i]['name'],
-                  false
-              )
-          );
-          setState(() {
+      // Get reference to user document
+      if (userDocRef == null) {
+        userDocRef = _db
+            .collection('users')
+            .document(fcmToken);
+      }
 
+      // Check if the user is launching app for the first time and in that case create a record for him
+      userDocRef.get().then((value) {
+        if (value.data == null) {
+          userDocRef.setData({
+            'createdAt': FieldValue.serverTimestamp(),
           });
         }
       });
 
+      // Get reference to places collection of current user
+      if (userPlacesRef == null) {
+        userPlacesRef = userDocRef.collection('places');
+      }
 
     }
   }
 
-  @override
-  Widget build(BuildContext context) {
-    return Container();
-  }
 }

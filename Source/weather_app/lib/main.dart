@@ -30,11 +30,13 @@ class LocationInfo {
     this.coordinates,
     this.name,
     this.selected,
+      this.ID
   );
 
   Coordinates coordinates;
   String name;
   bool selected;
+  String ID;
 }
 
 List<Coordinates> debugCoords = [
@@ -203,6 +205,11 @@ class MyApp extends StatelessWidget {
       theme: new ThemeData(
         dividerColor: Colors.transparent,
         canvasColor: Color.fromARGB(55, 0, 0, 0),
+
+        primaryColor: Colors.black,
+        accentColor: Colors.black,
+        hintColor: Colors.black,
+        splashColor: Colors.transparent
       ),
       home: MyHomePage(),
       localizationsDelegates: [
@@ -229,7 +236,7 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
 
   List<LocationInfo> currentLocationInfos = [
-    LocationInfo(null, "Your location", true),
+    LocationInfo(null, "Your location", true, null),
     //LocationInfo(debugCoords[1], "Lviv", false),
     //LocationInfo(debugCoords[2], "Austin", false),
     //LocationInfo(debugCoords[3], "Springfield", false),
@@ -280,6 +287,8 @@ class _MyHomePageState extends State<MyHomePage> {
   ErrorType currentError = null;
 
   String prevState = "";
+
+  FirebaseConnector connector;
 
   // For week
   List<WeekDayWeatherInfo> weekWeatherInfos = [];
@@ -547,7 +556,13 @@ class _MyHomePageState extends State<MyHomePage> {
     mainUnexpectedMessagesGeolocation.add("Can't find you!");
     mainUnexpectedMessagesGeolocation.add("Playing hide and seek?");
 
-    UpdateLocation();
+    connector = FirebaseConnector(currentLocationInfos: currentLocationInfos);
+
+    connector.Init().then((val) {
+      connector.GetUserPlaces();
+
+      UpdateLocation();
+    });
   }
 
   @override
@@ -568,10 +583,6 @@ class _MyHomePageState extends State<MyHomePage> {
       resizeToAvoidBottomInset: false,
       resizeToAvoidBottomPadding: false,
       body: Stack(fit: StackFit.expand, children: [
-        FCMMessageHandler(
-          currentLocationInfos: currentLocationInfos,
-        ),
-
         // BG
         Stack(
           fit: StackFit.expand,
@@ -985,7 +996,6 @@ class _MyHomePageState extends State<MyHomePage> {
         )
       ]),
       endDrawer: LocationDrawer(
-        locationInfos: currentLocationInfos,
         updateLocationFunction: UpdateLocation,
         homePageState: this,
       ),
@@ -1142,15 +1152,13 @@ class CurrentDayShortInfo extends StatelessWidget {
 }
 
 class LocationDrawer extends StatefulWidget {
-  final List<LocationInfo> locationInfos;
-
   final Function updateLocationFunction;
 
   final _MyHomePageState homePageState;
+  _LocationAdditionDialogState locationAdditionDialogState;
 
   LocationDrawer({
     Key key,
-    @required this.locationInfos,
     @required this.updateLocationFunction,
     @required this.homePageState,
   }) : super(key: key);
@@ -1166,13 +1174,25 @@ class _LocationDrawerState extends State<LocationDrawer> {
   String countrySearchString = "";
   List<LocationInfo> searchResultLocationInfos = List<LocationInfo>();
 
+  ScrollController drawerListViewController;
+
   FocusNode myFocusNode;
+
+  LocationInfo addedLocationInfo = null;
 
   @override
   void initState() {
     // TODO: implement initState
-    searchResultLocationInfos.addAll(widget.locationInfos);
+    searchResultLocationInfos.addAll(widget.homePageState.currentLocationInfos);
     myFocusNode = FocusNode();
+
+    drawerListViewController = ScrollController();
+    drawerListViewController.addListener((){
+      FocusScope.of(context).requestFocus(new FocusNode());
+      setState(() {
+
+      });
+    });
     super.initState();
   }
 
@@ -1196,24 +1216,40 @@ class _LocationDrawerState extends State<LocationDrawer> {
     searchResultLocationInfos.clear();
 
     if (countrySearchString == "") {
-      searchResultLocationInfos.addAll(widget.locationInfos);
+      searchResultLocationInfos.addAll(widget.homePageState.currentLocationInfos);
       return;
     }
 
-    for (int i = 1; i < widget.locationInfos.length; ++i) {
+    for (int i = 1; i < widget.homePageState.currentLocationInfos.length; ++i) {
       // Check if current location info has something suitable
-      if (widget.locationInfos[i].name.toLowerCase().contains(countrySearchString.toLowerCase())) {
-        searchResultLocationInfos.add(widget.locationInfos[i]);
+      if (widget.homePageState.currentLocationInfos[i].name.toLowerCase().contains(countrySearchString.toLowerCase())) {
+        searchResultLocationInfos.add(widget.homePageState.currentLocationInfos[i]);
       }
     }
   }
 
-  void ClearCurrentUserPlaces() {
+  void AddLocation() {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) => LocationAdditionDialog(
+        drawerState: this,
+      ),
+    ).then((value) {
+      if (addedLocationInfo == null){
+        return;
+      }
 
-  }
+      widget.homePageState.connector.AddUserPlace(addedLocationInfo).then((val) {
+        addedLocationInfo = null;
 
-  void PerformCountryAPIRequest() {
+        setState(() {
+          searchResultLocationInfos.clear();
+          searchResultLocationInfos.addAll(widget.homePageState.currentLocationInfos);
+        });
+      });
+    });
 
+    return;
   }
 
   void SelectLocation(LocationInfo location) {
@@ -1222,12 +1258,12 @@ class _LocationDrawerState extends State<LocationDrawer> {
     }
 
     setState(() {
-      for (int i = 0; i < widget.locationInfos.length; ++i) {
-        if (location.coordinates == widget.locationInfos[i].coordinates) {
-          widget.locationInfos[i].selected = true;
-          LoadLocationInfo(widget.locationInfos[i]);
+      for (int i = 0; i < widget.homePageState.currentLocationInfos.length; ++i) {
+        if (location == widget.homePageState.currentLocationInfos[i]) {
+          widget.homePageState.currentLocationInfos[i].selected = true;
+          LoadLocationInfo(widget.homePageState.currentLocationInfos[i]);
         } else {
-          widget.locationInfos[i].selected = false;
+          widget.homePageState.currentLocationInfos[i].selected = false;
         }
       }
     });
@@ -1366,7 +1402,7 @@ class _LocationDrawerState extends State<LocationDrawer> {
                             padding: const EdgeInsets.symmetric(horizontal: 15.0),
                             child: GestureDetector(
                               onTap: () {
-                                
+                                AddLocation();
                               },
                               child: Icon(Icons.add, color: Colors.white)
                             ),
@@ -1408,6 +1444,8 @@ class _LocationDrawerState extends State<LocationDrawer> {
                       // Search results from current location infos
                       return ListView.builder(
 
+                        controller: drawerListViewController,
+
                         physics: AlwaysScrollableScrollPhysics(
                             parent: BouncingScrollPhysics()),
 
@@ -1425,6 +1463,8 @@ class _LocationDrawerState extends State<LocationDrawer> {
                                   SelectLocation(searchResultLocationInfos[index]);
                                 },
                               trailingIcon: Icon(Icons.location_on, color: Colors.white,),
+                              itemID: searchResultLocationInfos[index].ID,
+                              homePageState: widget.homePageState,
                             );
                           }
                           else {
@@ -1433,7 +1473,15 @@ class _LocationDrawerState extends State<LocationDrawer> {
                                 name:  searchResultLocationInfos[index].name,
                                 OnTap:  () {
                                   SelectLocation(searchResultLocationInfos[index]);
-                                }
+                                },
+                              itemID: searchResultLocationInfos[index].ID,
+                              homePageState: widget.homePageState,
+                              dismissed: () {
+                                setState(() {
+                                  widget.homePageState.connector.RemoveUserPlace(searchResultLocationInfos[index].ID);
+                                });
+                                QuerySearch();
+                              },
                             );
                           }
                         },
@@ -1454,6 +1502,9 @@ class DrawerSelectableLocation extends StatefulWidget {
   final String name;
   final Function OnTap;
   final Icon trailingIcon;
+  final String itemID;
+  final _MyHomePageState homePageState;
+  final Function dismissed;
 
   DrawerSelectableLocation({
     Key key,
@@ -1461,6 +1512,9 @@ class DrawerSelectableLocation extends StatefulWidget {
     @required this.name,
     @required this.OnTap,
     this.trailingIcon,
+    this.itemID,
+    this.homePageState,
+    this.dismissed,
   }) : super(key: key);
 
   @override
@@ -1477,28 +1531,276 @@ class _DrawerSelectableLocationState extends State<DrawerSelectableLocation> {
             ? Color.fromARGB(85, 0, 0, 0)
             : Color.fromARGB(0, 0, 0, 0),
       ),
-      child: ListTile(
-        trailing: widget.trailingIcon,
-        title: Align(
-          alignment: Alignment.centerRight,
-          child: Text(
-            widget.name,
-            style: TextStyle(
-              color: widget.isSelected
-                  ? Colors.white
-                  : Colors.white.withOpacity(0.65),
-              fontFamily: 'HelveticaNeue',
-              fontSize: 18.0,
-              fontWeight: widget.isSelected
-                  ? FontWeight.w500
-                  : FontWeight.w300,
+      child: Dismissible(
+        key: Key(widget.itemID),
+        onDismissed: (direction) {
+          widget.dismissed();
+        },
+        confirmDismiss: (direction) async {
+          if (widget.dismissed == null) {
+            return false;
+          }
+          else {
+            return true;
+          }
+        },
+        child: ListTile(
+          trailing: widget.trailingIcon,
+          title: Align(
+            alignment: Alignment.centerRight,
+            child: Text(
+              widget.name,
+              style: TextStyle(
+                color: widget.isSelected
+                    ? Colors.white
+                    : Colors.white.withOpacity(0.65),
+                fontFamily: 'HelveticaNeue',
+                fontSize: 18.0,
+                fontWeight: widget.isSelected
+                    ? FontWeight.w500
+                    : FontWeight.w300,
+              ),
             ),
           ),
+          onTap: () {
+            widget.OnTap();
+          },
         ),
-        onTap: () {
-          widget.OnTap();
-        },
       ),
     );
   }
 }
+
+class PlacesAPISearchItem {
+  Coordinates coords;
+  String title;
+  String categoryTitle;
+  String vicinity;
+}
+
+class LocationAdditionDialog extends StatefulWidget {
+
+  final _LocationDrawerState drawerState;
+
+  LocationAdditionDialog({
+    Key key,
+    @required this.drawerState,
+  }) : super(key: key);
+
+  @override
+  _LocationAdditionDialogState createState() => _LocationAdditionDialogState();
+}
+
+class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
+
+  String PlacesAPIAppCode = "7ciDg_Pl1PV-Md4noTn17A";
+  String PlacesAPIAppID = "CFglxeF2oorKunPgo3IK";
+
+  bool isLoading = false;
+
+  List<PlacesAPISearchItem> searchResults = List<PlacesAPISearchItem>();
+
+  PlacesAPISearchItem selectedItem = null;
+
+  TextEditingController countryTextController = new TextEditingController();
+  FocusNode countryFocusNode = new FocusNode();
+
+  dialogContent(BuildContext context) {
+    return Container(
+      decoration: new BoxDecoration(
+        color: Colors.white,
+        shape: BoxShape.rectangle,
+        borderRadius: BorderRadius.circular(15),
+      ),
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.end,
+        mainAxisSize: MainAxisSize.max,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: <Widget>[
+          Expanded(
+            child: Padding(
+              padding: const EdgeInsets.symmetric(vertical: 10.0),
+              child: Container(
+                height: 175,
+                child: new Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: <Widget>[
+                    new Padding(
+                        padding: new EdgeInsets.only(top: 8.0, left: 16.0, right: 16.0),
+                        child: new TextField(
+                          focusNode: countryFocusNode,
+
+                          onTap: () {
+                            FocusScope.of(context).requestFocus(countryFocusNode);
+                          },
+
+                          style: new TextStyle(fontSize: 18.0, color: Colors.black),
+
+                          decoration: InputDecoration(
+                            prefixIcon: new Icon(Icons.search),
+                            suffixIcon: new IconButton(
+                              icon: new Icon(Icons.close),
+                              onPressed: () {
+                                countryTextController.clear();
+                                searchResults.clear();
+                                selectedItem = null;
+                                FocusScope.of(context).requestFocus(new FocusNode());
+                              },
+                            ),
+                            hintText: "Search...",
+                            hintStyle: TextStyle(fontSize: 16.0, color: Colors.black.withOpacity(0.35)),
+                          ),
+
+                          onChanged: (String text) {
+                            UpdateCountries();
+                          },
+                          controller: countryTextController,
+                        )),
+                    new Expanded(
+                      child: new Padding(
+                          padding: new EdgeInsets.only(top: 8.0),
+                          child: countryFocusNode.hasFocus ? _buildListView() : Container()),
+                    )
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildListView() {
+    return Center(
+      child: Scrollbar(
+        child: !isLoading ? ListView.builder(
+            itemCount: searchResults.length,
+            physics: BouncingScrollPhysics(),
+            itemBuilder: (BuildContext context, int index) {
+              return _buildRow(searchResults[index], index);
+            })
+            :
+            Container(
+              width: 50,
+              height: 50,
+              child: CircularProgressIndicator(
+                strokeWidth: 3,
+                valueColor:
+                new AlwaysStoppedAnimation<Color>(Colors.black),
+              ),
+            ),
+      ),
+    );
+  }
+
+  Widget _buildRow(PlacesAPISearchItem item, int index) {
+    return new ListTile(
+        onTap: () {
+          setState(() {
+            countryTextController.text = item.title;
+            selectedItem = searchResults[index];
+
+            FocusScope.of(context).requestFocus(new FocusNode());
+
+            LocationInfo tileLocInfo = LocationInfo(searchResults[index].coords, searchResults[index].title, false, null);
+
+            widget.drawerState.addedLocationInfo = tileLocInfo;
+
+            setState(() {
+              Navigator.pop(context);
+            });
+          });
+        },
+        title: new Text(
+          item.title,
+        ),
+      subtitle: Text(item.vicinity),
+    );
+  }
+  
+  @override
+  Widget build(BuildContext context) {
+    return Dialog(
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(15),
+      ),
+      elevation: 0,
+      backgroundColor: Colors.transparent,
+      child: dialogContent(context),
+    );
+  }
+
+  String viableCategory = "city-town-village";
+  String ConstructAPICallURI(String search, Coordinates userCoords)
+  {
+    String APICallPlaceholder = "https://places.cit.api.here.com/places/v1/autosuggest?at={LAT},{LON}&q={SEARCH}&app_id={YOUR_APP_ID}&app_code={YOUR_APP_CODE}";
+
+    APICallPlaceholder = APICallPlaceholder.replaceAll("{LAT}", userCoords.latitude.toString());
+    APICallPlaceholder = APICallPlaceholder.replaceAll("{LON}", userCoords.longitude.toString());
+
+    APICallPlaceholder = APICallPlaceholder.replaceAll("{SEARCH}", search);
+
+    APICallPlaceholder = APICallPlaceholder.replaceAll("{YOUR_APP_ID}", PlacesAPIAppID);
+    APICallPlaceholder = APICallPlaceholder.replaceAll("{YOUR_APP_CODE}", PlacesAPIAppCode);
+
+    return APICallPlaceholder;
+  }
+
+  Future<http.Response> GetSearchResults(http.Client client, String search, Coordinates userCoords) async {
+    return client.get(ConstructAPICallURI(search, userCoords));
+  }
+
+  void UpdateCountries() {
+    setState(() {
+      isLoading = true;
+    });
+
+    GetSearchResults(http.Client(),
+        countryTextController.text, widget.drawerState.widget.homePageState.userCoords).then((value) {
+      List<dynamic> countriesJSON = json.decode(value.body)["results"];
+
+      setState(() {
+        searchResults.clear();
+      });
+
+      for (int i = 0; i < countriesJSON.length; ++i) {
+        String category = countriesJSON[i]['category'];
+
+        if (category != "administrative-region" && category != "city-town-village"){
+          continue;
+        }
+
+        PlacesAPISearchItem item = PlacesAPISearchItem();
+        item.title = countriesJSON[i]['title'];
+        item.categoryTitle = countriesJSON[i]['categoryTitle'];
+        item.vicinity = countriesJSON[i]['vicinity'].toString().replaceAll('<br/>', '\n');
+        item.coords = Coordinates(countriesJSON[i]['position'][0], countriesJSON[i]['position'][1]);
+
+        searchResults.add(item);
+      }
+
+      setState(() {
+        isLoading = false;
+      });
+    });
+  }
+
+  @override
+  void initState() {
+    // TODO: implement initState
+    super.initState();
+
+    UpdateCountries();
+
+    widget.drawerState.widget.locationAdditionDialogState = this;
+  }
+
+  @override
+  void dispose() {
+    // TODO: implement dispose
+    super.dispose();
+    countryTextController.dispose();
+  }
+}
+
