@@ -206,9 +206,9 @@ class MyApp extends StatelessWidget {
         dividerColor: Colors.transparent,
         canvasColor: Color.fromARGB(55, 0, 0, 0),
 
-        primaryColor: Colors.black,
-        accentColor: Colors.black,
-        hintColor: Colors.black,
+        primaryColor: Colors.white,
+        accentColor: Colors.white,
+        hintColor: Colors.white,
         splashColor: Colors.transparent
       ),
       home: MyHomePage(),
@@ -568,7 +568,7 @@ class _MyHomePageState extends State<MyHomePage> {
   @override
   Widget build(BuildContext context) {
     currentLocale = Localizations.localeOf(context);
-
+    
     if (currentLocale.toString().contains("ru")) {
       todayString = "Сегодня";
       weekString = "Неделя";
@@ -1398,13 +1398,16 @@ class _LocationDrawerState extends State<LocationDrawer> {
                             ),
                           );
                         } else {
-                          return Padding(
-                            padding: const EdgeInsets.symmetric(horizontal: 15.0),
-                            child: GestureDetector(
-                              onTap: () {
-                                AddLocation();
-                              },
-                              child: Icon(Icons.add, color: Colors.white)
+                          return GestureDetector(
+                            onTap: () {
+                              AddLocation();
+                            },
+                            child: Container(
+                              width: 48,
+                              height: 48,
+                              alignment: Alignment.center,
+                              color: Colors.black.withOpacity(0.0), // otherwise the gesture detecor will shrink tap detection area
+                              child: Icon(Icons.add, color: Colors.white),
                             ),
                           );
                         }
@@ -1608,7 +1611,7 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
   dialogContent(BuildContext context) {
     return Container(
       decoration: new BoxDecoration(
-        color: Colors.white,
+        color: Color.fromARGB(255, 25, 25, 25).withOpacity(0.65),
         shape: BoxShape.rectangle,
         borderRadius: BorderRadius.circular(15),
       ),
@@ -1634,12 +1637,12 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
                             FocusScope.of(context).requestFocus(countryFocusNode);
                           },
 
-                          style: new TextStyle(fontSize: 18.0, color: Colors.black),
+                          style: new TextStyle(fontSize: 18.0, color: Colors.white),
 
                           decoration: InputDecoration(
-                            prefixIcon: new Icon(Icons.search),
+                            prefixIcon: new Icon(Icons.search, color: Colors.white,),
                             suffixIcon: new IconButton(
-                              icon: new Icon(Icons.close),
+                              icon: new Icon(Icons.close, color: Colors.white,),
                               onPressed: () {
                                 countryTextController.clear();
                                 searchResults.clear();
@@ -1648,7 +1651,7 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
                               },
                             ),
                             hintText: "Search...",
-                            hintStyle: TextStyle(fontSize: 16.0, color: Colors.black.withOpacity(0.35)),
+                            hintStyle: TextStyle(fontSize: 16.0, color: Colors.white.withOpacity(0.35)),
                           ),
 
                           onChanged: (String text) {
@@ -1714,8 +1717,16 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
         },
         title: new Text(
           item.title,
+          style: TextStyle(
+            color: Colors.white,
+          ),
         ),
-      subtitle: Text(item.vicinity),
+      subtitle: Text(
+        item.vicinity,
+        style: TextStyle(
+          color: Colors.white.withOpacity(0.5),
+        ),
+      ),
     );
   }
   
