@@ -1620,7 +1620,7 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
       decoration: new BoxDecoration(
         color: Color.fromARGB(255, 25, 25, 25).withOpacity(0.65),
         shape: BoxShape.rectangle,
-        borderRadius: BorderRadius.circular(15),
+        borderRadius: BorderRadius.circular(0),
       ),
       child: Column(
         mainAxisAlignment: MainAxisAlignment.end,
@@ -1745,9 +1745,6 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
   @override
   Widget build(BuildContext context) {
     return Dialog(
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(15),
-      ),
       elevation: 0,
       backgroundColor: Colors.transparent,
       child: dialogContent(context),
