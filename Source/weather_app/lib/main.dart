@@ -16,8 +16,10 @@ import 'package:geocoder/geocoder.dart';
 import 'package:flutter/services.dart';
 
 import 'package:flutter_localizations/flutter_localizations.dart';
-import 'package:firebase_core/firebase_core.dart';
+
 import 'package:http/http.dart' as http;
+
+import 'package:intl/intl.dart';
 
 import 'messageHandler.dart';
 
@@ -226,6 +228,12 @@ class MyApp extends StatelessWidget {
   }
 }
 
+String todayString;
+String weekString;
+String currentPlaceString;
+String searchString;
+String locationAdditionString;
+
 class MyHomePage extends StatefulWidget {
   @override
   _MyHomePageState createState() {
@@ -236,15 +244,11 @@ class MyHomePage extends StatefulWidget {
 class _MyHomePageState extends State<MyHomePage> {
 
   List<LocationInfo> currentLocationInfos = [
-    LocationInfo(null, "Your location", true, null),
+    LocationInfo(null, null, true, null),
     //LocationInfo(debugCoords[1], "Lviv", false),
     //LocationInfo(debugCoords[2], "Austin", false),
     //LocationInfo(debugCoords[3], "Springfield", false),
   ];
-
-  String todayString;
-  String weekString;
-  String currentPlaceString;
 
   List<String> mainUnexpectedMessages = List<String>();
   List<String> mainUnexpectedMessagesGeolocation = List<String>();
@@ -393,11 +397,11 @@ class _MyHomePageState extends State<MyHomePage> {
 
                 Address address = addresses.first;
 
-                country = address.countryName;
+                country = address.countryName == null ? "" : address.countryName;
                 locality = address.locality == null
-                    ? address.featureName
-                    : address.locality;
-                adminArea = address.adminArea;
+                    ? (address.featureName == null ? "" : address.featureName)
+                    : (address.locality == null ? "" : address.locality);
+                adminArea = address.adminArea == null ? "" : address.adminArea;
 
                 UpdateCurrentWeather();
                 print("Finished updating location");
@@ -573,10 +577,14 @@ class _MyHomePageState extends State<MyHomePage> {
       todayString = "Сегодня";
       weekString = "Неделя";
       currentPlaceString = "Моя позиция";
+      searchString = 'Найти...';
+      locationAdditionString = 'Имя города, страны, округа...';
     } else {
       todayString = "Today";
       weekString = "Week";
       currentPlaceString = "Current position";
+      searchString = 'Search...';
+      locationAdditionString = 'City, country, vicinity...';
     }
 
     return Scaffold(
@@ -1056,7 +1064,7 @@ class CurrentDayShortInfo extends StatelessWidget {
                     alignment: Alignment.centerLeft,
                     child: RichText(
                       text: TextSpan(
-                        text: (adminArea == null ? '' : (adminArea + ', ')) +
+                        text: (adminArea == '' ? '' : (adminArea + ', ')) +
                             country,
                         style: TextStyle(
                           color: Colors.white.withOpacity(TextOpacity),
@@ -1333,19 +1341,18 @@ class _LocationDrawerState extends State<LocationDrawer> {
                         textCapitalization: TextCapitalization.words,
                         decoration: InputDecoration(
                           border: InputBorder.none,
-                          hintText: 'Search...',
+                          hintText: searchString,
                           hintStyle: TextStyle(
                             color: Colors.white.withOpacity(0.45),
+                            fontWeight: FontWeight.w400,
                             fontFamily: 'HelveticaNeue',
                             fontSize: 16.0,
-                            fontWeight: FontWeight.w300,
                           ),
                         ),
                         style: TextStyle(
                           color: Colors.white.withOpacity(0.85),
-                          fontFamily: 'HelveticaNeue',
                           fontSize: 16.0,
-                          fontWeight: FontWeight.w300,
+                          fontWeight: FontWeight.w400,
                         ),
                         cursorColor: Colors.white,
                       ),
@@ -1552,7 +1559,7 @@ class _DrawerSelectableLocationState extends State<DrawerSelectableLocation> {
           title: Align(
             alignment: Alignment.centerRight,
             child: Text(
-              widget.name,
+              widget.name == null ? currentPlaceString : widget.name,
               style: TextStyle(
                 color: widget.isSelected
                     ? Colors.white
@@ -1650,8 +1657,13 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
                                 FocusScope.of(context).requestFocus(new FocusNode());
                               },
                             ),
-                            hintText: "Search...",
-                            hintStyle: TextStyle(fontSize: 16.0, color: Colors.white.withOpacity(0.35)),
+                            hintText: locationAdditionString,
+                            hintStyle: TextStyle(
+                                fontSize: 16.0,
+                                fontWeight: FontWeight.w400,
+                                fontFamily: 'HelveticaNeue',
+                                color: Colors.white.withOpacity(0.45)
+                            ),
                           ),
 
                           onChanged: (String text) {
