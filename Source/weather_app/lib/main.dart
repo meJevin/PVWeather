@@ -558,7 +558,7 @@ class _MyHomePageState extends State<MyHomePage> {
 
     mainUnexpectedMessagesGeolocation.add("Where are you?");
     mainUnexpectedMessagesGeolocation.add("Can't find you!");
-    mainUnexpectedMessagesGeolocation.add("Playing hide and seek?");
+    mainUnexpectedMessagesGeolocation.add("Hide and seek?");
 
     connector = FirebaseConnector(currentLocationInfos: currentLocationInfos);
 
@@ -1635,45 +1635,58 @@ class _LocationAdditionDialogState extends State<LocationAdditionDialog> {
                 child: new Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: <Widget>[
-                    new Padding(
-                        padding: new EdgeInsets.only(top: 8.0, left: 16.0, right: 16.0),
-                        child: new TextField(
-                          focusNode: countryFocusNode,
+                    Row (
+                      children: <Widget>[
+                        Expanded(
+                          child: Padding(
+                              padding: EdgeInsets.only(top: 8.0, left: 16.0, right: 8.0),
+                              child: TextField(
+                                focusNode: countryFocusNode,
 
-                          onTap: () {
-                            FocusScope.of(context).requestFocus(countryFocusNode);
+                                onTap: () {
+                                  FocusScope.of(context).requestFocus(countryFocusNode);
+                                },
+
+                                style: TextStyle(fontSize: 18.0, color: Colors.white),
+
+                                decoration: InputDecoration(
+                                  prefixIcon: Icon(Icons.search, color: Colors.white,),
+                                  hintText: locationAdditionString,
+                                  hintStyle: TextStyle(
+                                      fontSize: 16.0,
+                                      fontWeight: FontWeight.w400,
+                                      fontFamily: 'HelveticaNeue',
+                                      color: Colors.white.withOpacity(0.45)
+                                  ),
+                                ),
+
+                                onChanged: (String text) {
+                                  UpdateCountries();
+                                },
+                                controller: countryTextController,
+                              )),
+                        ),
+                        IconButton(
+                          icon: Icon(Icons.close, color: Colors.white,),
+                          splashColor: Colors.transparent,
+                          highlightColor: Colors.transparent,
+                          onPressed: () {
+                            if (countryFocusNode.hasFocus) {
+                              countryTextController.clear();
+                              searchResults.clear();
+                              selectedItem = null;
+                              FocusScope.of(context).requestFocus(new FocusNode());
+                            }
+                            else {
+                              Navigator.pop(context);
+                            }
                           },
-
-                          style: new TextStyle(fontSize: 18.0, color: Colors.white),
-
-                          decoration: InputDecoration(
-                            prefixIcon: new Icon(Icons.search, color: Colors.white,),
-                            suffixIcon: new IconButton(
-                              icon: new Icon(Icons.close, color: Colors.white,),
-                              onPressed: () {
-                                countryTextController.clear();
-                                searchResults.clear();
-                                selectedItem = null;
-                                FocusScope.of(context).requestFocus(new FocusNode());
-                              },
-                            ),
-                            hintText: locationAdditionString,
-                            hintStyle: TextStyle(
-                                fontSize: 16.0,
-                                fontWeight: FontWeight.w400,
-                                fontFamily: 'HelveticaNeue',
-                                color: Colors.white.withOpacity(0.45)
-                            ),
-                          ),
-
-                          onChanged: (String text) {
-                            UpdateCountries();
-                          },
-                          controller: countryTextController,
-                        )),
-                    new Expanded(
-                      child: new Padding(
-                          padding: new EdgeInsets.only(top: 8.0),
+                        ),
+                      ],
+                    ),
+                    Expanded(
+                      child: Padding(
+                          padding: EdgeInsets.only(top: 8.0),
                           child: countryFocusNode.hasFocus ? _buildListView() : Container()),
                     )
                   ],
