@@ -23,7 +23,7 @@ dependencies:
   flutter_localizations:
     sdk: flutter
 
-  intl: ^0.16.1
+  intl: 0.16.0
 
   location: ^1.4.1
 
